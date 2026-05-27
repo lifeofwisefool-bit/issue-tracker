@@ -1,0 +1,16 @@
+# macOS noise
+.DS_Store
+**/.DS_Store
+
+# Backups and retracted
+*.html.bak
+*.html.retracted
+
+# Template scaffolding — kept locally, not published
+index.template_v5.2.html
+
+# Historical IMDA-branded digests — held until content scrub decided
+digests/2026-05-27-1615.html
+digests/2026-05-27-1635.html
+digests/2026-05-27-1700.html
+digests/2026-05-27-1712.html

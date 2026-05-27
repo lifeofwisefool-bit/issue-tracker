@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Archive — Social Sensing</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+  <div class="top-stripe"></div>
+
+  <header class="site-header">
+    <div class="container">
+      <a href="index.html" class="site-title">Social Sensing</a>
+      <nav>
+        <a href="index.html" aria-current="page">Archive</a>
+        <a href="about.html">Methodology</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container archive">
+
+    <header class="archive-header">
+      <h1>Archive</h1>
+      <p class="subtitle">Sensing digests across regulated domains in Singapore tech and media.</p>
+    </header>
+
+    <div class="archive-controls">
+      <input type="search"
+             id="archive-search"
+             class="archive-search"
+             placeholder="Search digests by date, cluster, sentiment tag, or summary…"
+             autocomplete="off"
+             aria-label="Search archive">
+
+      <!-- Cluster filter row. Populated by Cowork at regeneration time. -->
+      <div class="filter-row" data-filter-group="cluster" role="tablist" aria-label="Filter by cluster">
+        <button type="button" class="filter-pill is-active" data-cluster="all" role="tab" aria-selected="true">
+          All <span class="pill-count">0</span>
+        </button>
+        <!-- COWORK FILL: one button per cluster slug, e.g.
+        <button type="button" class="filter-pill" data-cluster="ai-and-tech" role="tab" aria-selected="false">
+          AI &amp; tech <span class="pill-count">42</span>
+        </button>
+        -->
+        
+      </div>
+    </div>
+
+    <!-- Archive list. Cowork fills <tbody>. The data-sentiment attribute is preserved on each row
+         for future use; it is no longer read by the filter. -->
+    <table class="archive-list" role="grid">
+      <thead>
+        <tr>
+          <th scope="col" class="col-date">Date / Time</th>
+          <th scope="col" class="col-cluster">Dominant cluster</th>
+          <th scope="col" class="col-sentiment">Sentiment</th>
+          <th scope="col" class="col-summary">Summary</th>
+        </tr>
+      </thead>
+      <tbody id="archive-rows">
+        <!-- COWORK FILL: one row per non-retracted digest, e.g.
+        <tr class="archive-row"
+            data-href="digests/2026-05-27-0800.html"
+            data-cluster="ai-and-tech telco"
+            data-sentiment="mixed"
+            data-search="27 may 2026 ai tech telco mixed singapore agentic ai framework praise">
+          <td class="col-date">27 May 2026 · 08:00</td>
+          <td class="col-cluster">AI &amp; tech</td>
+          <td class="col-sentiment"><span class="sentiment-tag tag-mixed">Mixed</span></td>
+          <td class="col-summary">Weekly window showed steady AI governance discussion alongside telco merger fallout.</td>
+        </tr>
+        -->
+        
+      </tbody>
+    </table>
+
+    <p id="archive-empty" class="archive-empty" hidden>No results match your filters.</p>
+
+    <nav class="archive-pagination" aria-label="Archive pages">
+      <button type="button" id="page-newer" class="page-control" disabled>← Newer</button>
+      <span class="page-status" id="page-status">Page 1</span>
+      <button type="button" id="page-older" class="page-control">Older →</button>
+    </nav>
+
+  </main>
+
+  <script>
+  (function () {
+    'use strict';
+
+    // ---------- Configuration ----------
+    var PAGE_SIZE = 50;
+
+    // ---------- State ----------
+    // Sentiment filter removed in v5.1. State carries only the dimensions the UI exposes.
+    var state = {
+      search: '',
+      cluster: 'all',
+      page: 1
+    };
+
+    // ---------- DOM refs ----------
+    var searchEl = document.getElementById('archive-search');
+    var rowsContainer = document.getElementById('archive-rows');
+    var emptyEl = document.getElementById('archive-empty');
+    var pageStatusEl = document.getElementById('page-status');
+    var newerBtn = document.getElementById('page-newer');
+    var olderBtn = document.getElementById('page-older');
+    var clusterRow = document.querySelector('[data-filter-group="cluster"]');
+
+    var allRows = Array.prototype.slice.call(rowsContainer.querySelectorAll('tr.archive-row'));
+
+    // ---------- URL query param: ?cluster=[slug] ----------
+    var params = new URLSearchParams(window.location.search);
+    var initialCluster = params.get('cluster');
+    if (initialCluster) {
+      state.cluster = initialCluster.toLowerCase();
+    }
+
+    // ---------- Filter function ----------
+    // Sentiment dimension removed. Filter is search-text AND cluster only.
+    function rowMatches(row) {
+      var searchOk = true;
+      if (state.search) {
+        var hay = (row.getAttribute('data-search') || '').toLowerCase();
+        searchOk = hay.indexOf(state.search) !== -1;
+      }
+
+      var clusterOk = true;
+      if (state.cluster !== 'all') {
+        var rowClusters = (row.getAttribute('data-cluster') || '').toLowerCase().split(/\s+/);
+        clusterOk = rowClusters.indexOf(state.cluster) !== -1;
+      }
+
+      return searchOk && clusterOk;
+    }
+
+    // ---------- Render ----------
+    function render() {
+      var matching = allRows.filter(rowMatches);
+      var totalPages = Math.max(1, Math.ceil(matching.length / PAGE_SIZE));
+      if (state.page > totalPages) state.page = totalPages;
+
+      var startIdx = (state.page - 1) * PAGE_SIZE;
+      var endIdx = startIdx + PAGE_SIZE;
+      var visibleSet = new Set(matching.slice(startIdx, endIdx));
+
+      allRows.forEach(function (row) {
+        row.hidden = !visibleSet.has(row);
+      });
+
+      emptyEl.hidden = matching.length !== 0;
+      pageStatusEl.textContent = 'Page ' + state.page + ' of ' + totalPages +
+                                  ' (' + matching.length + ' digest' + (matching.length === 1 ? '' : 's') + ')';
+      newerBtn.disabled = state.page <= 1;
+      olderBtn.disabled = state.page >= totalPages;
+    }
+
+    // ---------- Cluster pill activation ----------
+    function setActiveClusterPill(slug) {
+      var pills = clusterRow.querySelectorAll('.filter-pill');
+      pills.forEach(function (p) {
+        var match = (p.getAttribute('data-cluster') || '').toLowerCase() === slug;
+        p.classList.toggle('is-active', match);
+        p.setAttribute('aria-selected', match ? 'true' : 'false');
+      });
+    }
+    setActiveClusterPill(state.cluster);
+
+    // ---------- Event wiring ----------
+    if (searchEl) {
+      searchEl.addEventListener('input', function (e) {
+        state.search = (e.target.value || '').toLowerCase().trim();
+        state.page = 1;
+        render();
+      });
+    }
+
+    if (clusterRow) {
+      clusterRow.addEventListener('click', function (e) {
+        var pill = e.target.closest('.filter-pill');
+        if (!pill) return;
+        var slug = (pill.getAttribute('data-cluster') || 'all').toLowerCase();
+        state.cluster = slug;
+        state.page = 1;
+        setActiveClusterPill(slug);
+        render();
+      });
+    }
+
+    allRows.forEach(function (row) {
+      row.addEventListener('click', function () {
+        var href = row.getAttribute('data-href');
+        if (href) window.location.href = href;
+      });
+    });
+
+    newerBtn.addEventListener('click', function () {
+      if (state.page > 1) { state.page--; render(); }
+    });
+    olderBtn.addEventListener('click', function () {
+      state.page++;
+      render();
+    });
+
+    // ---------- Initial paint ----------
+    render();
+  })();
+  </script>
+
+</body>
+</html>
