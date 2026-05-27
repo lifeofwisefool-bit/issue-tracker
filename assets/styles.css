@@ -1,6 +1,6 @@
 /* ============================================================
-   Social Sensing Digest — site stylesheet
-   Hand-maintained. Cowork does not edit this file.
+   Social Sensing Digest — site stylesheet (v5.3)
+   Table-based archive layout. Hand-maintained. Cowork does not edit this file.
    ============================================================ */
 
 /* ---------- Reset & base ---------- */
@@ -414,21 +414,24 @@ main { padding: 24px 0 48px; }
   margin: 0;
 }
 
-.archive-search {
-  margin: 20px 0;
+input.archive-search {
   width: 100%;
   max-width: 480px;
-}
-
-.archive-search input {
-  width: 100%;
+  margin: 20px 0;
   padding: 10px 14px;
   font-size: 14px;
   border: 1px solid #E0E0E0;
   border-radius: 4px;
   font-family: inherit;
 }
-.archive-search input:focus { outline: none; border-color: #D81B38; }
+input.archive-search:focus {
+  outline: none;
+  border-color: #D81B38;
+}
+
+.archive-controls {
+  margin: 20px 0;
+}
 
 .filter-row {
   display: flex;
@@ -458,38 +461,59 @@ main { padding: 24px 0 48px; }
   text-decoration: none;
 }
 .filter-pill:hover { border-color: #999999; }
-.filter-pill.active {
+.filter-pill.is-active {
   background: #6B2C91;
   border-color: #6B2C91;
   color: #FFFFFF;
 }
-.filter-pill .count { color: #999999; margin-left: 4px; }
-.filter-pill.active .count { color: #FFFFFF; opacity: 0.7; }
+.filter-pill .pill-count {
+  color: #999999;
+  margin-left: 4px;
+  font-size: 11px;
+}
+.filter-pill.is-active .pill-count {
+  color: #FFFFFF;
+  opacity: 0.8;
+}
 
 .archive-list {
+  width: 100%;
+  border-collapse: collapse;
   margin: 24px 0;
   border-top: 1px solid #E0E0E0;
 }
+.archive-list thead th {
+  text-align: left;
+  padding: 12px 12px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #999999;
+  border-bottom: 1px solid #E0E0E0;
+}
+.archive-list .col-date     { width: 180px; }
+.archive-list .col-cluster  { width: 180px; }
+.archive-list .col-sentiment { width: 160px; }
+.archive-list .col-summary  { width: auto; }
 
 .archive-row {
-  display: grid;
-  grid-template-columns: 180px 180px 140px 1fr;
-  gap: 16px;
-  padding: 14px 0;
+  cursor: pointer;
   border-bottom: 1px solid #EEEEEE;
-  text-decoration: none;
-  color: #1A1A1A;
-  align-items: center;
-  transition: transform 0.1s ease, border-color 0.1s ease;
+  transition: background 0.1s ease, border-color 0.1s ease;
 }
+.archive-row td {
+  padding: 14px 12px;
+  vertical-align: top;
+}
+.archive-row td.col-date    { font-size: 13px; font-weight: 500; color: #1A1A1A; }
+.archive-row td.col-cluster { font-size: 13px; color: #666666; }
+.archive-row td.col-summary { font-size: 13px; color: #666666; line-height: 1.4; }
+.archive-row td.col-sentiment .sentiment-tag { font-size: 10px; }
 .archive-row:hover {
-  transform: translateY(-1px);
+  background: #FAFAFA;
   border-bottom-color: #D81B38;
 }
-.archive-row .date { font-size: 13px; color: #1A1A1A; font-weight: 500; }
-.archive-row .cluster { font-size: 13px; color: #666666; }
-.archive-row .sentiment-tag { font-size: 10px; }
-.archive-row .summary-excerpt { font-size: 13px; color: #666666; line-height: 1.4; }
 
 .archive-empty {
   padding: 48px 0;
@@ -504,8 +528,29 @@ main { padding: 24px 0 48px; }
   margin: 24px 0;
   font-size: 13px;
 }
-.archive-pagination a { color: #6B2C91; text-decoration: none; }
-.archive-pagination a:hover { text-decoration: underline; }
+.archive-pagination .page-control {
+  background: none;
+  border: 1px solid #E0E0E0;
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: #6B2C91;
+  cursor: pointer;
+  font-family: inherit;
+}
+.archive-pagination .page-control:hover:not(:disabled) {
+  border-color: #6B2C91;
+  background: #F8F8F8;
+}
+.archive-pagination .page-control:disabled {
+  color: #CCCCCC;
+  cursor: not-allowed;
+  border-color: #EEEEEE;
+}
+.archive-pagination .page-status {
+  color: #666666;
+  font-size: 13px;
+}
 
 /* ---------- Methodology (about.html) ---------- */
 
@@ -592,10 +637,15 @@ main { padding: 24px 0 48px; }
     gap: 12px;
   }
   .site-header nav { margin-left: 0; }
-  .archive-row {
-    grid-template-columns: 1fr;
-    gap: 4px;
-    padding: 14px 0;
+  .archive-list .col-sentiment,
+  .archive-list .col-cluster {
+    display: none;
+  }
+  .archive-list thead th {
+    padding: 10px 8px;
+  }
+  .archive-row td {
+    padding: 12px 8px;
   }
   .filter-row .row-label { min-width: auto; width: 100%; margin-bottom: 4px; }
   .page-header h1 { font-size: 22px; }
