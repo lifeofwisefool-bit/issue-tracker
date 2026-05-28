@@ -35,24 +35,18 @@
              autocomplete="off"
              aria-label="Search archive">
 
-      <!-- Cluster filter row. Populated by Cowork at regeneration time. -->
       <div class="filter-row" data-filter-group="cluster" role="tablist" aria-label="Filter by cluster">
         <button type="button" class="filter-pill is-active" data-cluster="all" role="tab" aria-selected="true">
-          All <span class="pill-count">3</span>
+          All <span class="pill-count">4</span>
         </button>
-        <!-- COWORK FILL: one button per cluster slug, e.g.
         <button type="button" class="filter-pill" data-cluster="ai-and-tech" role="tab" aria-selected="false">
-          AI &amp; tech <span class="pill-count">42</span>
+          AI &amp; tech <span class="pill-count">4</span>
         </button>
-        -->
         <button type="button" class="filter-pill" data-cluster="telco" role="tab" aria-selected="false">
-          Telco <span class="pill-count">1</span>
-        </button>
-        <button type="button" class="filter-pill" data-cluster="ai-and-tech" role="tab" aria-selected="false">
-          AI &amp; tech <span class="pill-count">3</span>
+          Telco <span class="pill-count">2</span>
         </button>
         <button type="button" class="filter-pill" data-cluster="online-safety" role="tab" aria-selected="false">
-          Online safety <span class="pill-count">2</span>
+          Online safety <span class="pill-count">3</span>
         </button>
         <button type="button" class="filter-pill" data-cluster="broadcast-media" role="tab" aria-selected="false">
           Broadcast media <span class="pill-count">2</span>
@@ -60,8 +54,6 @@
       </div>
     </div>
 
-    <!-- Archive list. Cowork fills <tbody>. The data-sentiment attribute is preserved on each row
-         for future use; it is no longer read by the filter. -->
     <table class="archive-list" role="grid">
       <thead>
         <tr>
@@ -72,18 +64,16 @@
         </tr>
       </thead>
       <tbody id="archive-rows">
-        <!-- COWORK FILL: one row per non-retracted digest, e.g.
         <tr class="archive-row"
-            data-href="digests/2026-05-27-0800.html"
-            data-cluster="ai-and-tech telco"
-            data-sentiment="mixed"
-            data-search="27 may 2026 ai tech telco mixed singapore agentic ai framework praise">
-          <td class="col-date">27 May 2026 · 08:00</td>
+            data-href="digests/2026-05-28-0800.html"
+            data-cluster="ai-and-tech telco online-safety"
+            data-sentiment="mostly-positive"
+            data-search="28 may 2026 08:00 sgt weekly ai tech nvidia openai mddi atx summit telco simba m1 imda online safety scam impersonation spf">
+          <td class="col-date">28 May 2026 · 08:00 SGT · Weekly</td>
           <td class="col-cluster">AI &amp; tech</td>
-          <td class="col-sentiment"><span class="sentiment-tag tag-mixed">Mixed</span></td>
-          <td class="col-summary">Weekly window showed steady AI governance discussion alongside telco merger fallout.</td>
+          <td class="col-sentiment"><span class="sentiment-tag tag-mostly-positive">Mostly positive · Loudest</span></td>
+          <td class="col-summary">ATx Summit's AI tailwinds shaped the window, set against Simba–M1 merger collapse and renewed government-impersonation scam alerts.</td>
         </tr>
-        -->
         <tr class="archive-row"
             data-href="digests/2026-05-27-1712.html"
             data-cluster="telco ai-and-tech online-safety broadcast-media"
@@ -131,18 +121,14 @@
   (function () {
     'use strict';
 
-    // ---------- Configuration ----------
     var PAGE_SIZE = 50;
 
-    // ---------- State ----------
-    // Sentiment filter removed in v5.1. State carries only the dimensions the UI exposes.
     var state = {
       search: '',
       cluster: 'all',
       page: 1
     };
 
-    // ---------- DOM refs ----------
     var searchEl = document.getElementById('archive-search');
     var rowsContainer = document.getElementById('archive-rows');
     var emptyEl = document.getElementById('archive-empty');
@@ -153,15 +139,12 @@
 
     var allRows = Array.prototype.slice.call(rowsContainer.querySelectorAll('tr.archive-row'));
 
-    // ---------- URL query param: ?cluster=[slug] ----------
     var params = new URLSearchParams(window.location.search);
     var initialCluster = params.get('cluster');
     if (initialCluster) {
       state.cluster = initialCluster.toLowerCase();
     }
 
-    // ---------- Filter function ----------
-    // Sentiment dimension removed. Filter is search-text AND cluster only.
     function rowMatches(row) {
       var searchOk = true;
       if (state.search) {
@@ -178,7 +161,6 @@
       return searchOk && clusterOk;
     }
 
-    // ---------- Render ----------
     function render() {
       var matching = allRows.filter(rowMatches);
       var totalPages = Math.max(1, Math.ceil(matching.length / PAGE_SIZE));
@@ -199,7 +181,6 @@
       olderBtn.disabled = state.page >= totalPages;
     }
 
-    // ---------- Cluster pill activation ----------
     function setActiveClusterPill(slug) {
       var pills = clusterRow.querySelectorAll('.filter-pill');
       pills.forEach(function (p) {
@@ -210,7 +191,6 @@
     }
     setActiveClusterPill(state.cluster);
 
-    // ---------- Event wiring ----------
     if (searchEl) {
       searchEl.addEventListener('input', function (e) {
         state.search = (e.target.value || '').toLowerCase().trim();
@@ -246,7 +226,6 @@
       render();
     });
 
-    // ---------- Initial paint ----------
     render();
   })();
   </script>
