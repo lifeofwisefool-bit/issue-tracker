@@ -206,7 +206,7 @@ async function openDetail(topic){
   const summary=`${d.public_n+d.media_n} item${(d.public_n+d.media_n)===1?'':'s'} this window · ${moodTone} tone overall.${off?'':' No official line captured yet (external signal).'}`;
   const mcard=(l,val,ic)=>`<div class="m"><div><div class="l">${l}</div><div class="n">${val}</div></div><span class="mic">${ic}</span></div>`;
   const metrics=`<div class="mgrid">${mcard('Public items',d.public_n,ICON.users)}${mcard('Media items',d.media_n,ICON.news)}${mcard('Engagement',Number(d.engagement||0).toLocaleString('en-SG'),ICON.heart)}${mcard('Negative share',negshare+'%',ICON.warn)}</div>`;
-  const sbar=`<div class="sbar"><i class="pos" style="width:${d.pos/tot*100}%"></i><i class="neu" style="width:${d.neu/tot*100}%"></i><i class="neg" style="width:${d.neg/tot*100}%"></i></div><div class="sleg">positive ${d.pos} · neutral ${d.neu} · negative ${d.neg}</div>`;
+  const sbar=`<div class="sbar"><i class="pos" style="width:${d.pos/tot*100}%"></i><i class="neu" style="width:${d.neu/tot*100}%"></i><i class="neg" style="width:${d.neg/tot*100}%"></i></div><div class="sleg">positive ${d.pos} (${Math.round(d.pos/tot*100)}%) · neutral ${d.neu} (${Math.round(d.neu/tot*100)}%) · negative ${d.neg} (${Math.round(d.neg/tot*100)}%)</div>`;
   const pubrange=d.pub_first?(d.pub_first===d.pub_last?d.pub_first:`${d.pub_first}–${d.pub_last}`):'this window';
   const seq=off
     ?`<div class="dsec">Event ${info("The sequence: when the official line was issued, and the window of public reaction that followed.")}</div><div class="seq"><span class="seqn off">Official line · ${off.date}</span><span class="chev">→</span><span class="seqn pub">Public reaction · ${pubrange}</span></div>`
