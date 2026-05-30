@@ -16,14 +16,14 @@
     --bg:#0f1115;--card:#171a21;--line:#2a2f3a;--ink:#e8eaed;--mut:#9aa3b2;
     --red:#e5484d;--amber:#f2b417;--green:#30a46c;--grey:#6b7280;--accent:#4c8bf5;
     --panel:#13161d;--barbg:#222732;--neu:#5f6672;--quote:#cfd4dd;--ovbg:rgba(8,10,14,.72);
-    --redbg:rgba(229,72,77,.15);--redtx:#ff9ea1;--redbd:#5a1f24;--acctx:#bcd4fb;--accbg:rgba(76,139,245,.15);
+    --redbg:rgba(229,72,77,.15);--redtx:#ff9ea1;--redbd:#5a1f24;--acctx:#bcd4fb;--accbg:rgba(76,139,245,.15);--greenbg:rgba(48,164,108,.16);
     --ambertx:#f7d774;--greentx:#7ee0ad;--bannerbg1:#3a1115;--bannerbg2:#451519;--bannertx:#ffd7d9;--verdictbg:#2a1115;
   }
   @media (prefers-color-scheme: light){:root{
     --bg:#f7f8fa;--card:#fff;--line:#e4e7ec;--ink:#1c2230;--mut:#667085;
     --red:#d92d20;--amber:#b9770a;--green:#067647;--grey:#98a2b3;--accent:#175cd3;
     --panel:#f1f3f5;--barbg:#e9ebef;--neu:#b6bcc6;--quote:#344054;--ovbg:rgba(20,30,50,.4);
-    --redbg:#fdeceb;--redtx:#a3261d;--redbd:#f3c2bf;--acctx:#1456b8;--accbg:#e7effb;
+    --redbg:#fdeceb;--redtx:#a3261d;--redbd:#f3c2bf;--acctx:#1456b8;--accbg:#e7effb;--greenbg:#e7f6ee;
     --ambertx:#8a5a06;--greentx:#075c38;--bannerbg1:#fdecec;--bannerbg2:#fbe3e3;--bannertx:#9a1c1c;--verdictbg:#fdeceb;
   }}
   *{box-sizing:border-box}
@@ -62,14 +62,16 @@
   .sheet .close{position:sticky;top:0;display:flex;justify-content:flex-end;background:var(--bg);padding:4px 0 8px}
   .sheet .close button{background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:6px 12px;font:600 14px/1 inherit;cursor:pointer}
   .dtitle{font-size:19px;font-weight:700;margin:6px 0 8px}.dsum{color:var(--mut);font-size:13px;margin:0 0 12px}
-  .mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0 14px}.mgrid .m{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 8px}
+  .mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0 14px}.mgrid .m{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 8px;display:flex;justify-content:space-between;align-items:flex-start;gap:5px}.mgrid .m .mic{color:var(--mut);flex:0 0 auto}.mgrid .m .mic svg{width:15px;height:15px}
   .mgrid .m .l{font-size:10px;color:var(--mut);line-height:1.2}.mgrid .m .n{font-size:16px;font-weight:700;margin-top:3px}
   .lanes{display:grid;grid-template-columns:1fr;gap:10px;margin:6px 0 18px}@media(min-width:620px){.lanes{grid-template-columns:repeat(3,1fr)}}
   .gapbox{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--card);margin:8px 0 18px}
   .gapsum{font-size:13px;color:var(--ink);line-height:1.8;margin-top:12px}
-  .lane{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--card)}.lane h5{margin:0 0 6px;font-size:12px}.lane.off h5{color:var(--acctx)}.lane.med h5{color:var(--ambertx)}.lane p{margin:0;font-size:13px;color:var(--mut)}.lane .stance{font-size:11px;color:var(--mut);margin-top:6px}.lane.empty{border-style:dashed;opacity:.7}
+  .lane{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--card)}.lane h5{margin:0 0 6px;font-size:12px;color:var(--ink);display:flex;align-items:center;gap:6px}.lane p{margin:0;font-size:13px;color:var(--ink)}.lane .stance{font-size:11px;color:var(--mut);margin-top:6px}.lane.empty{border-style:dashed;opacity:.7}
+  .ic{display:inline-flex;align-items:center;color:var(--mut)}.ic svg{width:14px;height:14px}
+  .kw{display:inline-block;font-size:10.5px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:1px 8px;margin:3px 4px 0 0;color:var(--mut)}
   .ruler{margin:0 0 16px}.ruler .rh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}.ruler .rh b{font-weight:600;font-size:13px}
-  .vb{font-size:11px;border-radius:6px;padding:2px 9px}.vb.red{background:var(--redbg);color:var(--redtx)}.vb.green{background:var(--accbg);color:var(--greentx)}.vb.amber{background:var(--panel);color:var(--ambertx)}
+  .vb{font-size:11px;border-radius:6px;padding:2px 9px}.vb.red{background:var(--redbg);color:var(--redtx)}.vb.green{background:var(--greenbg);color:var(--greentx)}.vb.amber{background:var(--panel);color:var(--ambertx)}
   .track{position:relative;height:30px}.track .base{position:absolute;top:13px;left:0;right:0;height:4px;background:var(--barbg);border-radius:2px}.track .span{position:absolute;top:13px;height:4px;border-radius:2px}
   .pin{position:absolute;top:5px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center}.pin i{width:13px;height:13px;border-radius:50%;border:2px solid var(--bg)}.pin span{font-size:10.5px;margin-top:2px;white-space:nowrap}
   .rends{display:flex;justify-content:space-between;font-size:10.5px;color:var(--mut);margin-top:11px}
@@ -102,7 +104,7 @@
     <button data-v="issues">Issues</button>
     <button data-v="sources">Sources</button>
   </nav>
-  <div class="range" id="range"><span data-d="1">24h</span><span data-d="2">2d</span><span data-d="30" class="on">30d</span><span data-d="cal">Calendar</span></div>
+  <div class="range" id="range"><span data-d="1">24h</span><span data-d="2">2d</span><span data-d="30" class="on">30d</span><span data-d="cal">Calendar</span><span id="tldr" style="margin-left:auto" title="Condense everything to verdicts, counts and keywords">TL;DR</span></div>
   <div class="range" id="calbar" style="display:none"><span style="border:none;padding:0">From</span><input type="date" id="calFrom"><span style="border:none;padding:0">to</span><input type="date" id="calTo"><button id="calApply">Apply</button></div>
   <section id="overview" class="on"><div class="kpis" id="kpis"></div><div id="ov-summary"></div>
     <div class="dsec" style="margin-top:18px">Sentiment over time</div>
@@ -135,6 +137,14 @@ function moodWord(sc){if(sc===null||sc===undefined)return '<span style="color:va
 function platOf(u){if(!u)return'';u=u.toLowerCase();if(u.includes('reddit'))return'Reddit';if(u.includes('youtube'))return'YouTube';if(u.includes('tiktok'))return'TikTok';if(u.includes('instagram'))return'Instagram';if(u.includes('facebook'))return'Facebook';if(u.includes('hardwarezone'))return'HardwareZone';if(u.includes('news.google'))return'News';return'';}
 const pctX=v=>Math.round((Math.max(-1,Math.min(1,v))+1)/2*100);
 let BOARD=null;
+let TLDR=false,CURRENT_TOPIC=null;try{TLDR=localStorage.getItem('tldr')==='1';}catch(e){}
+const ICON={
+ users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+ news:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg>',
+ heart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
+ warn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></svg>',
+ landmark:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>'
+};
 function trendSVG(D){
   if(!D||!D.length)return '<div class="meta">No trend data.</div>';
   const W=600,H=200,L=30,R=12,T=12,B=26,pw=W-L-R,ph=H-T-B,bw=Math.max(4,Math.min(12,pw/D.length-2));
@@ -154,6 +164,10 @@ function rulerHTML(pins,verdict,v){
   return `<div class="ruler"><div class="rh"><b>Tone of reception</b><span class="vb ${v}">${verdict}</span></div><div class="track"><div class="base"></div><div class="span" style="left:${lo}%;width:${w}%;background:${band}"></div>${ps}</div><div class="rends"><span>hostile</span><span>warm</span></div></div>`;
 }
 function issueRow(s){
+  if(TLDR){
+    const sv=s.max_sev>0?`<span class="sev" style="background:var(--panel);color:var(--mut)">${EXEC?sevWord(s.max_sev):'S'+(+s.max_sev).toFixed(1)}</span>`:'';
+    return `<div class="row" data-topic="${encodeURIComponent(s.topic)}"><span class="dot d-${s.rag}"></span><span class="t" style="flex:1">${nameOf(s.topic)}</span>${sv}<span class="meta" style="margin:0">${moodWord(s.sent)} · ${s.public_n+s.media_n}</span><span class="chev">›</span></div>`;
+  }
   const g=s.media_n>0?` · media ${s.media_n}`:'';
   const sv=s.max_sev>0?`<span class="sev" style="background:var(--panel);color:var(--mut)">${EXEC?sevWord(s.max_sev):'Sev '+(+s.max_sev).toFixed(1)}</span>`:'';
   const cline=EXEC?(s.official?'':'<div class="c">No official line yet</div>'):`<div class="c">Trigger ${s.trig}${s.official?'':' (no official line)'}</div>`;
@@ -169,6 +183,7 @@ function renderIssues(sortKey){
   document.getElementById("issues-list").innerHTML=[...BOARD.issues].sort(S[sortKey]||S.rag).map(issueRow).join("");
 }
 async function openDetail(topic){
+  CURRENT_TOPIC=topic;
   document.getElementById("detail").innerHTML='<div class="loading">Loading detail…</div>';
   document.getElementById("ov").classList.add("on");
   if(window.gtag)gtag('event','issue_open',{topic:codeOf(topic)});
@@ -178,7 +193,8 @@ async function openDetail(topic){
   const moodTone=d.sent<=-0.15?'negative':d.sent>=0.15?'positive':'mixed';
   const title=sm.headline||nameOf(topic);
   const summary=`${d.public_n+d.media_n} item${(d.public_n+d.media_n)===1?'':'s'} this window · ${moodTone} tone overall.${off?'':' No official line captured yet (external signal).'}`;
-  const metrics=`<div class="mgrid"><div class="m"><div class="l">Public items</div><div class="n">${d.public_n}</div></div><div class="m"><div class="l">Media items</div><div class="n">${d.media_n}</div></div><div class="m"><div class="l">Engagement</div><div class="n">${Number(d.engagement||0).toLocaleString('en-SG')}</div></div><div class="m"><div class="l">Negative share</div><div class="n">${negshare}%</div></div></div>`;
+  const mcard=(l,val,ic)=>`<div class="m"><div><div class="l">${l}</div><div class="n">${val}</div></div><span class="mic">${ic}</span></div>`;
+  const metrics=`<div class="mgrid">${mcard('Public items',d.public_n,ICON.users)}${mcard('Media items',d.media_n,ICON.news)}${mcard('Engagement',Number(d.engagement||0).toLocaleString('en-SG'),ICON.heart)}${mcard('Negative share',negshare+'%',ICON.warn)}</div>`;
   const sbar=`<div class="sbar"><i class="pos" style="width:${d.pos/tot*100}%"></i><i class="neu" style="width:${d.neu/tot*100}%"></i><i class="neg" style="width:${d.neg/tot*100}%"></i></div><div class="sleg">positive ${d.pos} · neutral ${d.neu} · negative ${d.neg}</div>`;
   const pubrange=d.pub_first?(d.pub_first===d.pub_last?d.pub_first:`${d.pub_first}–${d.pub_last}`):'this window';
   const seq=off
@@ -189,37 +205,46 @@ async function openDetail(topic){
     :`<p>${sm.off||'No official line captured.'}</p><div class="stance">External signal</div>`;
   const briefOK=n=>n>=3; // >=3 items: trust the cached synthesis; fewer: show the actual items (grounded, no generic text)
   const clip=(s,n)=>{s=String(s||'').replace(/\s+/g,' ').trim();return s.length>n?s.slice(0,n-1)+'…':s;};
+  const clipW=(s,n)=>{const w=String(s||'').replace(/\s+/g,' ').trim().split(' ').filter(Boolean);return w.length>n?w.slice(0,n).join(' ')+'…':w.join(' ');};
+  const kwList=s=>String(s||'').split(/[,·;]/).map(x=>x.trim()).filter(Boolean);
+  const kwChips=s=>kwList(s).slice(0,4).map(x=>`<span class="kw">${x}</span>`).join('');
+  const kwShort=(s,n)=>kwList(s).slice(0,n).join(' / ');
   const medGist=(d.news||[]).slice(0,3).map(n=>'“'+clip(n.t,90)+'”').join(' · ');
   const pubGist=(d.quotes||[]).slice(0,3).map(q=>'“'+clip(q.q,90)+'”').join(' · ');
   const medBox=d.media_n>0?`<p>${briefOK(d.media_n)&&sm.med?sm.med:(medGist?'Media reported: '+medGist:`${d.media_n} media item${d.media_n>1?'s':''}, ${moodWord(d.med_sent)} tone.`)}</p><div class="stance">${d.media_n} item${d.media_n>1?'s':''} · ${moodWord(d.med_sent)}</div>`:`<p>No media coverage in this window.</p>`;
   const pubBox=d.public_n>0?`<p>${briefOK(d.public_n)&&sm.pub?sm.pub:(pubGist?'Public posts said: '+pubGist:`${d.public_n} public post${d.public_n>1?'s':''}, ${moodWord(d.pub_sent)} tone.`)}</p><div class="stance">${d.public_n} item${d.public_n!==1?'s':''} · ${moodWord(d.pub_sent)}</div>`:`<p>No public discussion in this window.</p>`;
-  const pins=[];if(off&&off.sent!=null)pins.push({t:'Official',x:num(off.sent),c:'var(--accent)'});if(d.media_n>0)pins.push({t:'Media',x:num(d.med_sent),c:'var(--amber)'});if(d.public_n>0)pins.push({t:'Public',x:num(d.pub_sent),c:'var(--mut)'});
-  const gapPair=(label,n,cs,insight)=>{
-    if(!off) return {t:`<b>Official ↔ ${label}:</b> no official line — not assessed`,v:'amber'};
-    if(!n||cs==null) return {t:`<b>Official ↔ ${label}:</b> not enough data (no ${label.toLowerCase()} in this window)`,v:'amber'};
+  const pins=[];if(off&&off.sent!=null)pins.push({t:'Official',x:num(off.sent),c:'var(--accent)'});if(d.media_n>0)pins.push({t:'Media',x:num(d.med_sent),c:'var(--ink)'});if(d.public_n>0)pins.push({t:'Public',x:num(d.pub_sent),c:'var(--mut)'});
+  const gapPair=(label,n,cs,insight,kwCp)=>{
+    if(!off) return {t:`<b>Official ↔ ${label}:</b> no official line — not assessed`,short:`<b>${label}:</b> no official line`,v:'amber'};
+    if(!n||cs==null) return {t:`<b>Official ↔ ${label}:</b> not enough data (no ${label.toLowerCase()} in this window)`,short:`<b>${label}:</b> no data`,v:'amber'};
     const dist=Math.abs(num(off.sent)-num(cs)); const verdict=dist>0.3?'divergence':'aligned'; const vv=dist>0.3?'red':'green';
     const detail=(insight&&n>=3)?insight:`${label.toLowerCase()} reception runs ${num(cs)<num(off.sent)?'more negative':'more positive'} than the official tone`;
-    return {t:`<b>Official ↔ ${label} — ${verdict}:</b> ${detail}`,v:vv};
+    const offK=kwShort(sm.kw_off,3), cpK=kwShort(kwCp,3);
+    const short=(offK&&cpK)?`<b>${label} — ${verdict}:</b> ${offK} ↔ ${cpK}`:`<b>${label} — ${verdict}:</b> ${clipW(detail,10)}`;
+    return {t:`<b>Official ↔ ${label} — ${verdict}:</b> ${detail}`,short,v:vv};
   };
-  const gPub=gapPair('Public',d.public_n,d.pub_sent,sm.gap_pub), gMed=gapPair('Media',d.media_n,d.med_sent,sm.gap_med);
+  const gPub=gapPair('Public',d.public_n,d.pub_sent,sm.gap_pub,sm.kw_pub), gMed=gapPair('Media',d.media_n,d.med_sent,sm.gap_med,sm.kw_med);
   let v,verdict;
   if(!off){v='amber';verdict='no official line';}
   else{const vs=[gPub.v,gMed.v];v=vs.includes('red')?'red':(vs.every(x=>x==='green')?'green':'amber');verdict=v==='red'?'divergence':v==='green'?'aligned':'mixed';}
-  const gapSummary=off?`${gPub.t}<br>${gMed.t}`:'No official line captured — gap not assessed (external signal only, E10).';
+  const gapSummary=off?(TLDR?`${gPub.short}<br>${gMed.short}`:`${gPub.t}<br>${gMed.t}`):'No official line captured — gap not assessed (external signal only, E10).';
+  const oB=TLDR?(off?`<div>${kwChips(sm.kw_off)||clipW(sm.off||off.content,9)}</div><div class="stance">${off.src||'Official'} · ${moodWord(off.sent)}</div>`:`<div class="stance">No official line</div>`):offBox;
+  const mB=TLDR?(d.media_n>0?`<div>${kwChips(sm.kw_med)||clipW(sm.med||(d.news&&d.news[0]?d.news[0].t:''),9)}</div><div class="stance">${moodWord(d.med_sent)} · ${d.media_n} item${d.media_n!==1?'s':''}</div>`:`<div class="stance">—</div>`):medBox;
+  const pB=TLDR?(d.public_n>0?`<div>${kwChips(sm.kw_pub)||clipW(sm.pub||(d.quotes&&d.quotes[0]?d.quotes[0].q:''),9)}</div><div class="stance">${moodWord(d.pub_sent)} · ${d.public_n} item${d.public_n!==1?'s':''}</div>`:`<div class="stance">—</div>`):pubBox;
   const pubV=(d.quotes||[]).map(q=>`<div class="dq">“${q.q}”<span class="src">${platOf(q.u)||'public'} · ${q.d} · ${ragDot(q.sc)}${q.u?` · <a class="lnk" href="${q.u}" target="_blank" rel="noopener">source ↗</a>`:''}</span></div>`).join('');
   const newsV=(d.news||[]).map(n=>`<div class="dq" style="font-style:normal">${n.t}<span class="src">${platOf(n.u)||'news media'} · ${n.d} · ${ragDot(n.sc)}${n.u?` · <a class="lnk" href="${n.u}" target="_blank" rel="noopener">read article ↗</a>`:''}</span></div>`).join('');
   const offV=off?`<div class="dq" style="font-style:normal">${off.content||'Official communication'}<span class="src">${off.src||'Official source'} · ${off.date} · ${ragDot(off.sent)}${off.url?` · <a class="lnk" href="${off.url}" target="_blank" rel="noopener">read source ↗</a>`:''}</span></div>`:'';
   const nq=(d.quotes||[]).length+(d.news||[]).length+(off?1:0);
   const verb=nq?`<details><summary>Sources (${nq})</summary>${offV?`<div class="dsec">Official line</div>${offV}`:''}${pubV?`<div class="dsec">Public posts</div>${pubV}`:''}${newsV?`<div class="dsec">Referenced news</div>${newsV}`:''}</details>`:'';
   document.getElementById("detail").innerHTML=`
-    <div class="dsum" style="color:var(--ambertx);font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:.05em">${EXEC?(d.max_sev>0?sevWord(d.max_sev)+' severity':'Issue'):nameOf(topic)+(d.max_sev>0?` · ⚠ ${Math.round(d.max_sev)}`:'')}</div>
+    <div class="dsum" style="color:var(--mut);font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:.05em">${EXEC?(d.max_sev>0?sevWord(d.max_sev)+' severity':'Issue'):nameOf(topic)+(d.max_sev>0?` · ⚠ ${Math.round(d.max_sev)}`:'')}</div>
     <div class="dtitle">${title}</div>
-    <p class="dsum">${summary}</p>
-    <div class="dsum" style="font-size:12px">Window: last 30 days${d.pub_last?` · latest public post ${d.pub_last}`:''}</div>
-    ${metrics}${sbar}${seq}
+    ${TLDR?'':`<p class="dsum">${summary}</p>
+    <div class="dsum" style="font-size:12px">Window: last 30 days${d.pub_last?` · latest public post ${d.pub_last}`:''}</div>`}
+    ${metrics}${sbar}${TLDR?'':seq}
     <div class="dsec">Compare — official · media · public</div>
-    <div class="lanes"><div class="lane off ${off?'':'empty'}"><h5>Official</h5>${offBox}</div><div class="lane med ${d.media_n>0?'':'empty'}"><h5>Media</h5>${medBox}</div><div class="lane pub"><h5>Public</h5>${pubBox}</div></div>
-    <div class="gapbox"><div class="dsec" style="color:var(--red);margin-top:0">The gap</div>${rulerHTML(pins,verdict,v)}<div class="gapsum">${strip(gapSummary)}</div></div>
+    <div class="lanes"><div class="lane off ${off?'':'empty'}"><h5><span class="ic">${ICON.landmark}</span>Official</h5>${oB}</div><div class="lane med ${d.media_n>0?'':'empty'}"><h5><span class="ic">${ICON.news}</span>Media</h5>${mB}</div><div class="lane pub"><h5><span class="ic">${ICON.users}</span>Public</h5>${pB}</div></div>
+    <div class="gapbox"><div class="dsec" style="margin-top:0">The gap</div>${rulerHTML(pins,verdict,v)}<div class="gapsum">${strip(gapSummary)}</div></div>
     ${verb}`;
 }
 function closeDetail(){document.getElementById("ov").classList.remove("on");}
@@ -238,7 +263,7 @@ function render(B){
   const loud=[...B.issues].sort((a,b)=>(b.public_n+b.media_n)-(a.public_n+a.media_n))[0];
   const neg=[...(flaggedIssues.length?flaggedIssues:B.issues)].sort((a,b)=>num(a.sent)-num(b.sent))[0];
   const seg=(n,c)=>n?`<span style="width:${n/tot*100}%;background:${c}"></span>`:'';
-  document.getElementById("ov-summary").innerHTML=`<p style="font-size:15px;margin:14px 0 8px">${red+amb} issue${red+amb===1?'':'s'} flagged — <span style="color:var(--red)">${red} red</span>, <span style="color:var(--amber)">${amb} amber</span>.${loud?` Loudest: <strong>${nameOf(loud.topic)}</strong> (${loud.public_n+loud.media_n} items).`:''}${neg?` Most negative: <strong>${nameOf(neg.topic)}</strong>.`:''}</p><div style="display:flex;height:9px;border-radius:4px;overflow:hidden;background:var(--barbg)">${seg(red,'var(--red)')}${seg(amb,'var(--amber)')}${seg(grn,'var(--green)')}${seg(gry,'var(--mut)')}</div><div class="meta">${red} red · ${amb} amber · ${grn} green${gry?` · ${gry} grey (low evidence)`:''} across ${tot} topics</div>`;
+  document.getElementById("ov-summary").innerHTML=`${TLDR?'':`<p style="font-size:15px;margin:14px 0 8px">${red+amb} issue${red+amb===1?'':'s'} flagged — <span style="color:var(--red)">${red} red</span>, <span style="color:var(--amber)">${amb} amber</span>.${loud?` Loudest: <strong>${nameOf(loud.topic)}</strong> (${loud.public_n+loud.media_n} items).`:''}${neg?` Most negative: <strong>${nameOf(neg.topic)}</strong>.`:''}</p>`}<div style="display:flex;height:9px;border-radius:4px;overflow:hidden;background:var(--barbg)">${seg(red,'var(--red)')}${seg(amb,'var(--amber)')}${seg(grn,'var(--green)')}${seg(gry,'var(--mut)')}</div><div class="meta">${red} red · ${amb} amber · ${grn} green${gry?` · ${gry} grey (low evidence)`:''} across ${tot} topics</div>`;
   document.getElementById("ov-trend").innerHTML=trendSVG(B.trend);
   document.getElementById("feed").innerHTML=(B.feed||[]).map(f=>`<div class="feedrow"><a href="${f.u}" target="_blank" rel="noopener">${f.t} ↗</a><div class="fm"><span style="color:var(--ink);font-weight:600">${fdate(f.d)}${f.tm?', '+f.tm:''}</span><span class="fchip">${nameOf(f.tp)}</span>${ragDot(f.sc)}</div></div>`).join('');
   renderIssues('rag');
@@ -246,6 +271,9 @@ function render(B){
 }
 document.getElementById("tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id===b.dataset.v));window.scrollTo(0,0);if(window.gtag)gtag('event','tab_view',{tab:b.dataset.v});});
 document.getElementById("sort").addEventListener("change",e=>renderIssues(e.target.value));
+function applyTldr(){const b=document.getElementById("tldr");if(b){b.classList.toggle("on",TLDR);b.textContent=TLDR?"TL;DR ✓":"TL;DR";}document.body.classList.toggle("tldr",TLDR);}
+document.getElementById("tldr").addEventListener("click",()=>{TLDR=!TLDR;try{localStorage.setItem("tldr",TLDR?"1":"0");}catch(e){}applyTldr();if(BOARD)render(BOARD);if(document.getElementById("ov").classList.contains("on")&&CURRENT_TOPIC)openDetail(CURRENT_TOPIC);});
+applyTldr();
 document.addEventListener("click",e=>{const r=e.target.closest(".row[data-topic]");if(r)openDetail(decodeURIComponent(r.dataset.topic));});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDetail();});
 let RANGE={from:null,to:null};
@@ -254,7 +282,7 @@ function loadBoard(){const L=document.getElementById("loading");L.style.display=
 function setDays(days){const to=new Date();const from=new Date();from.setDate(from.getDate()-(days-1));RANGE={from:ymd(from),to:ymd(to)};loadBoard();}
 document.getElementById("range").addEventListener("click",e=>{const b=e.target.closest("span[data-d]");if(!b)return;const cal=document.getElementById("calbar");
   if(b.dataset.d==='cal'){cal.style.display=cal.style.display==='none'?'flex':'none';return;}
-  [...document.querySelectorAll('#range span')].forEach(x=>x.classList.toggle('on',x===b));cal.style.display='none';setDays(+b.dataset.d);if(window.gtag)gtag('event','range',{days:b.dataset.d});});
+  [...document.querySelectorAll('#range span[data-d]')].forEach(x=>x.classList.toggle('on',x===b));cal.style.display='none';setDays(+b.dataset.d);if(window.gtag)gtag('event','range',{days:b.dataset.d});});
 document.getElementById("calApply").addEventListener("click",()=>{const f=document.getElementById("calFrom").value,t=document.getElementById("calTo").value;if(!f||!t)return;RANGE={from:f,to:t};[...document.querySelectorAll('#range span')].forEach(x=>x.classList.remove('on'));loadBoard();if(window.gtag)gtag('event','range',{days:'calendar'});});
 setDays(30);
 </script>
