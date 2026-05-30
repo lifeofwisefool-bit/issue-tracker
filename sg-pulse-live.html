@@ -65,6 +65,8 @@
   .mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0 14px}.mgrid .m{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 8px}
   .mgrid .m .l{font-size:10px;color:var(--mut);line-height:1.2}.mgrid .m .n{font-size:16px;font-weight:700;margin-top:3px}
   .lanes{display:grid;grid-template-columns:1fr;gap:10px;margin:6px 0 18px}@media(min-width:620px){.lanes{grid-template-columns:repeat(3,1fr)}}
+  .gapbox{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--card);margin:8px 0 18px}
+  .gapsum{font-size:13px;color:var(--ink);line-height:1.8;margin-top:12px}
   .lane{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--card)}.lane h5{margin:0 0 6px;font-size:12px}.lane.off h5{color:var(--acctx)}.lane.med h5{color:var(--ambertx)}.lane p{margin:0;font-size:13px;color:var(--mut)}.lane .stance{font-size:11px;color:var(--mut);margin-top:6px}.lane.empty{border-style:dashed;opacity:.7}
   .ruler{margin:0 0 16px}.ruler .rh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}.ruler .rh b{font-weight:600;font-size:13px}
   .vb{font-size:11px;border-radius:6px;padding:2px 9px}.vb.red{background:var(--redbg);color:var(--redtx)}.vb.green{background:var(--accbg);color:var(--greentx)}.vb.amber{background:var(--panel);color:var(--ambertx)}
@@ -183,21 +185,30 @@ async function openDetail(topic){
     ?`<div class="dsec">Event</div><div class="seq"><span class="seqn off">Official line · ${off.date}</span><span class="chev">→</span><span class="seqn pub">Public reaction · ${pubrange}</span></div>`
     :`<div class="dsec">Event</div><div class="seq"><span class="seqn empty">No official line</span><span class="chev">→</span><span class="seqn pub">Public signal · ${pubrange}</span></div>`;
   const offBox=off
-    ?`<p>${sm.off||'Official line present.'}</p><div class="stance">${off.date} · stance ${moodWord(off.sent)}</div>`
+    ?`<p>${sm.off||'Official line present.'}</p><div class="stance">${off.src?off.src+' · ':''}${off.date} · stance ${moodWord(off.sent)}</div>`
     :`<p>${sm.off||'No official line captured.'}</p><div class="stance">External signal</div>`;
-  const briefOK=n=>n>=3; // cached brief is all-time; only trust it to describe the window when volume supports it
-  const medBox=d.media_n>0?`<p>${briefOK(d.media_n)&&sm.med?sm.med:`${d.media_n} media item${d.media_n>1?'s':''} in this window — ${moodWord(d.med_sent)} tone. See Sources below.`}</p><div class="stance">${d.media_n} item${d.media_n>1?'s':''} · ${moodWord(d.med_sent)}</div>`:`<p>No media coverage in this window.</p>`;
-  const pubBox=d.public_n>0?`<p>${briefOK(d.public_n)&&sm.pub?sm.pub:`${d.public_n} public post${d.public_n>1?'s':''} in this window — ${moodWord(d.pub_sent)} tone. See Sources below.`}</p><div class="stance">${d.public_n} item${d.public_n!==1?'s':''} · ${moodWord(d.pub_sent)}</div>`:`<p>No public discussion in this window.</p>`;
+  const briefOK=n=>n>=3; // >=3 items: trust the cached synthesis; fewer: show the actual items (grounded, no generic text)
+  const clip=(s,n)=>{s=String(s||'').replace(/\s+/g,' ').trim();return s.length>n?s.slice(0,n-1)+'…':s;};
+  const medGist=(d.news||[]).slice(0,3).map(n=>'“'+clip(n.t,90)+'”').join(' · ');
+  const pubGist=(d.quotes||[]).slice(0,3).map(q=>'“'+clip(q.q,90)+'”').join(' · ');
+  const medBox=d.media_n>0?`<p>${briefOK(d.media_n)&&sm.med?sm.med:(medGist?'Media reported: '+medGist:`${d.media_n} media item${d.media_n>1?'s':''}, ${moodWord(d.med_sent)} tone.`)}</p><div class="stance">${d.media_n} item${d.media_n>1?'s':''} · ${moodWord(d.med_sent)}</div>`:`<p>No media coverage in this window.</p>`;
+  const pubBox=d.public_n>0?`<p>${briefOK(d.public_n)&&sm.pub?sm.pub:(pubGist?'Public posts said: '+pubGist:`${d.public_n} public post${d.public_n>1?'s':''}, ${moodWord(d.pub_sent)} tone.`)}</p><div class="stance">${d.public_n} item${d.public_n!==1?'s':''} · ${moodWord(d.pub_sent)}</div>`:`<p>No public discussion in this window.</p>`;
   const pins=[];if(off&&off.sent!=null)pins.push({t:'Official',x:num(off.sent),c:'var(--accent)'});if(d.media_n>0)pins.push({t:'Media',x:num(d.med_sent),c:'var(--amber)'});if(d.public_n>0)pins.push({t:'Public',x:num(d.pub_sent),c:'var(--mut)'});
-  let v='amber',verdict='no official line';
-  if(off){
-    if(d.public_n===0&&d.media_n===0){v='amber';verdict='silence';}
-    else{const recv=Math.min(num(d.pub_sent||0),num(d.med_sent||0));const dist=Math.abs(num(off.sent)-recv);v=dist>0.3?'red':'green';verdict=dist>0.3?'divergence':'aligned';}
-  }
-  const gapline=off?(verdict==='divergence'?'Official line is constructive, but media/public reception runs negative — divergence in tone.':verdict==='silence'?'Official line active; little public or media pickup.':'Official line and reception look broadly aligned.'):'External signal; no official line in the store — no gap claimed (E10).';
+  const gapPair=(label,n,cs)=>{
+    if(!off) return {t:`Official ↔ ${label}: no official line — not assessed`,v:'amber'};
+    if(!n||cs==null) return {t:`Official ↔ ${label}: not enough data (no ${label.toLowerCase()} in this window)`,v:'amber'};
+    const dist=Math.abs(num(off.sent)-num(cs));
+    if(dist>0.3) return {t:`Official ↔ ${label}: divergence — ${label.toLowerCase()} runs ${num(cs)<num(off.sent)?'more negative':'more positive'} than the official tone`,v:'red'};
+    return {t:`Official ↔ ${label}: aligned — broadly in step with the official tone`,v:'green'};
+  };
+  const gPub=gapPair('Public',d.public_n,d.pub_sent), gMed=gapPair('Media',d.media_n,d.med_sent);
+  let v,verdict;
+  if(!off){v='amber';verdict='no official line';}
+  else{const vs=[gPub.v,gMed.v];v=vs.includes('red')?'red':(vs.every(x=>x==='green')?'green':'amber');verdict=v==='red'?'divergence':v==='green'?'aligned':'mixed';}
+  const gapSummary=off?`${gPub.t}<br>${gMed.t}`:'No official line captured — gap not assessed (external signal only, E10).';
   const pubV=(d.quotes||[]).map(q=>`<div class="dq">“${q.q}”<span class="src">${platOf(q.u)||'public'} · ${q.d} · ${ragDot(q.sc)}${q.u?` · <a class="lnk" href="${q.u}" target="_blank" rel="noopener">source ↗</a>`:''}</span></div>`).join('');
   const newsV=(d.news||[]).map(n=>`<div class="dq" style="font-style:normal">${n.t}<span class="src">${platOf(n.u)||'news media'} · ${n.d} · ${ragDot(n.sc)}${n.u?` · <a class="lnk" href="${n.u}" target="_blank" rel="noopener">read article ↗</a>`:''}</span></div>`).join('');
-  const offV=off?`<div class="dq" style="font-style:normal">${off.title}<span class="src">official source · ${off.date} · ${ragDot(off.sent)}${off.url?` · <a class="lnk" href="${off.url}" target="_blank" rel="noopener">read source ↗</a>`:''}</span></div>`:'';
+  const offV=off?`<div class="dq" style="font-style:normal">${off.content||'Official communication'}<span class="src">${off.src||'Official source'} · ${off.date} · ${ragDot(off.sent)}${off.url?` · <a class="lnk" href="${off.url}" target="_blank" rel="noopener">read source ↗</a>`:''}</span></div>`:'';
   const nq=(d.quotes||[]).length+(d.news||[]).length+(off?1:0);
   const verb=nq?`<details><summary>Sources (${nq})</summary>${offV?`<div class="dsec">Official line</div>${offV}`:''}${pubV?`<div class="dsec">Public posts</div>${pubV}`:''}${newsV?`<div class="dsec">Referenced news</div>${newsV}`:''}</details>`:'';
   document.getElementById("detail").innerHTML=`
@@ -208,7 +219,7 @@ async function openDetail(topic){
     ${metrics}${sbar}${seq}
     <div class="dsec">Compare — official · media · public</div>
     <div class="lanes"><div class="lane off ${off?'':'empty'}"><h5>Official</h5>${offBox}</div><div class="lane med ${d.media_n>0?'':'empty'}"><h5>Media</h5>${medBox}</div><div class="lane pub"><h5>Public</h5>${pubBox}</div></div>
-    <div class="dsec" style="color:var(--red)">The gap</div>${rulerHTML(pins,verdict,v)}<div class="onreq">${strip(gapline)}</div>
+    <div class="gapbox"><div class="dsec" style="color:var(--red);margin-top:0">The gap</div>${rulerHTML(pins,verdict,v)}<div class="gapsum">${strip(gapSummary)}</div></div>
     ${verb}`;
 }
 function closeDetail(){document.getElementById("ov").classList.remove("on");}
