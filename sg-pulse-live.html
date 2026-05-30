@@ -97,8 +97,8 @@
   .info:hover .tip,.info:focus .tip{display:block}
   #ov-trend{position:relative}
   .trendtip{position:absolute;display:none;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:11.5px;color:var(--ink);pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.3);z-index:6}
-  #wordcloud{display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:1px;padding:10px 0 4px}
-  .cw{display:inline-block;margin:4px 9px;line-height:1.1;font-weight:600}
+  #wordcloud{position:relative;margin-top:8px;overflow:hidden}
+  .cw{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;line-height:1;font-weight:700;letter-spacing:-.01em}
 </style>
 </head>
 <body>
@@ -260,7 +260,34 @@ async function openDetail(topic){
 }
 function closeDetail(){document.getElementById("ov").classList.remove("on");}
 const trendTip=document.createElement('div');trendTip.className='trendtip';
-function renderCloud(words){const el=document.getElementById('wordcloud');if(!el)return;if(!words||!words.length){el.innerHTML='<div class="meta">No themes yet.</div>';return;}const ws=words.map(w=>+w.weight);const mx=Math.max(...ws),mn=Math.min(...ws);el.innerHTML=words.map(w=>{const f=13+(mx>mn?(+w.weight-mn)/(mx-mn):0)*17;const c=w.sent<-0.1?'var(--red)':w.sent>0.1?'var(--green)':'var(--amber)';return `<span class="cw" style="font-size:${f.toFixed(0)}px;color:${c}">${w.w}</span>`;}).join('');}
+let LAST_CLOUD=[];
+function renderCloud(words){
+  LAST_CLOUD=words||[];
+  const el=document.getElementById('wordcloud'); if(!el) return;
+  el.innerHTML='';
+  if(!words||!words.length){ el.style.height='auto'; el.innerHTML='<div class="meta">No themes in this window.</div>'; return; }
+  const W=el.clientWidth||600, H=W<430?300:360; el.style.height=H+'px';
+  const cx=W/2, cy=H/2;
+  const ws=words.map(w=>+w.weight), mx=Math.max(...ws), mn=Math.min(...ws);
+  const baseF=13, addF=W<430?19:30;
+  const colOf=w=> w.sent<-0.1?'var(--red)':(w.sent>0.1?'var(--green)':'var(--amber)');
+  const placed=[];
+  words.forEach((w,idx)=>{
+    const norm=mx>mn?(+w.weight-mn)/(mx-mn):1;
+    const sp=document.createElement('span'); sp.className='cw'; sp.textContent=w.w;
+    sp.style.fontSize=(baseF+norm*addF).toFixed(0)+'px'; sp.style.color=colOf(w);
+    el.appendChild(sp);
+    const bw=sp.offsetWidth, bh=sp.offsetHeight, pad=3;
+    const fits=(x,y)=>{const box={l:x-bw/2-pad,r:x+bw/2+pad,t:y-bh/2-pad,b:y+bh/2+pad};
+      if(box.l<2||box.r>W-2||box.t<2||box.b>H-2) return null;
+      return placed.some(p=>!(box.r<p.l||box.l>p.r||box.b<p.t||box.t>p.b))?false:box;};
+    if(idx===0){ sp.style.left=cx+'px'; sp.style.top=cy+'px'; placed.push({l:cx-bw/2-pad,r:cx+bw/2+pad,t:cy-bh/2-pad,b:cy+bh/2+pad}); return; }
+    let done=false;
+    for(let t=0;t<900;t+=0.22){ const r=4.2*t; const x=cx+r*Math.cos(t), y=cy+r*Math.sin(t)*0.6;
+      const box=fits(x,y); if(box){ sp.style.left=x.toFixed(0)+'px'; sp.style.top=y.toFixed(0)+'px'; placed.push(box); done=true; break; } }
+    if(!done) sp.remove();
+  });
+}
 // Progressive list: render a batch, load more as a sentinel scrolls into view. A hidden tab's
 // list stays unbuilt until the tab is opened (sentinel not in viewport until then).
 function lazyList(container, items, rowFn, batch){
@@ -311,6 +338,7 @@ document.getElementById("tldr").addEventListener("click",()=>{TLDR=!TLDR;try{loc
 applyTldr();
 document.addEventListener("click",e=>{const r=e.target.closest(".row[data-topic]");if(r)openDetail(decodeURIComponent(r.dataset.topic));});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDetail();});
+let _cz;window.addEventListener("resize",()=>{clearTimeout(_cz);_cz=setTimeout(()=>{if(LAST_CLOUD.length)renderCloud(LAST_CLOUD);},220);});
 let RANGE={from:null,to:null};
 function ymd(d){return d.toISOString().slice(0,10);}
 function loadBoard(){const L=document.getElementById("loading");L.style.display="block";L.textContent="Loading…";rpc('get_board',{p_from:RANGE.from,p_to:RANGE.to}).then(render).catch(e=>{L.textContent="Could not load live data: "+e.message+". (Check network / login.)";});}
