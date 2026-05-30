@@ -69,8 +69,8 @@
   .toast.on{opacity:1}
   .sheet .close button{background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:6px 12px;font:600 14px/1 inherit;cursor:pointer}
   .dtitle{font-size:19px;font-weight:700;margin:6px 0 8px}.dsum{color:var(--mut);font-size:13px;margin:0 0 12px}
-  .mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0 14px}.mgrid .m{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 8px;display:flex;justify-content:space-between;align-items:flex-start;gap:5px}.mgrid .m .mic{color:var(--mut);flex:0 0 auto}.mgrid .m .mic svg{width:15px;height:15px}
-  .mgrid .m .l{font-size:10px;color:var(--mut);line-height:1.2}.mgrid .m .n{font-size:16px;font-weight:700;margin-top:3px}
+  .mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0 14px}.mgrid .m{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 10px;display:flex;flex-direction:column;min-height:68px}.mgrid .m .mhead{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}.mgrid .m .mic{color:var(--mut);flex:0 0 auto}.mgrid .m .mic svg{width:15px;height:15px}
+  .mgrid .m .l{font-size:10px;color:var(--mut);line-height:1.2}.mgrid .m .n{font-size:16px;font-weight:700;margin-top:auto;padding-top:6px}
   .lanes{display:grid;grid-template-columns:1fr;gap:10px;margin:6px 0 18px}@media(min-width:620px){.lanes{grid-template-columns:repeat(3,1fr)}}
   .gapbox{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--card);margin:8px 0 18px}
   .gapsum{font-size:13px;color:var(--ink);line-height:1.8;margin-top:12px}
@@ -212,7 +212,7 @@ async function openDetail(topic){
   const moodTone=d.sent<=-0.15?'negative':d.sent>=0.15?'positive':'mixed';
   const title=sm.headline||nameOf(topic);
   const summary=`${d.public_n+d.media_n} item${(d.public_n+d.media_n)===1?'':'s'} this window · ${moodTone} tone overall.${off?'':' No official line captured yet (external signal).'}`;
-  const mcard=(l,val,ic)=>`<div class="m"><div><div class="l">${l}</div><div class="n">${val}</div></div><span class="mic">${ic}</span></div>`;
+  const mcard=(l,val,ic)=>`<div class="m"><div class="mhead"><div class="l">${l}</div><span class="mic">${ic}</span></div><div class="n">${val}</div></div>`;
   const metrics=`<div class="mgrid">${mcard('Public items',d.public_n,ICON.users)}${mcard('Media items',d.media_n,ICON.news)}${mcard('Engagement',Number(d.engagement||0).toLocaleString('en-SG'),ICON.heart)}${mcard('Negative share',negshare+'%',ICON.warn)}</div>`;
   const sbar=`<div class="sbar"><i class="pos" style="width:${d.pos/tot*100}%"></i><i class="neu" style="width:${d.neu/tot*100}%"></i><i class="neg" style="width:${d.neg/tot*100}%"></i></div><div class="sleg">positive ${d.pos} (${Math.round(d.pos/tot*100)}%) · neutral ${d.neu} (${Math.round(d.neu/tot*100)}%) · negative ${d.neg} (${Math.round(d.neg/tot*100)}%)</div>`;
   const pubrange=d.pub_first?(d.pub_first===d.pub_last?d.pub_first:`${d.pub_first}–${d.pub_last}`):'this window';
