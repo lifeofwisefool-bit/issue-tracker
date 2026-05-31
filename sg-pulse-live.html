@@ -136,7 +136,6 @@
     <div class="dsec" style="margin-top:18px">Sentiment over time <span class="info" tabindex="0" role="button" aria-label="Chart help">i<span class="tip">Daily counts of items stacked by sentiment — green positive, amber neutral, red negative. Hover or tap a bar for that day's breakdown.</span></span></div>
     <div class="leg"><span><i style="background:var(--green)"></i>positive</span><span><i style="background:var(--amber)"></i>neutral</span><span><i style="background:var(--red)"></i>negative</span></div>
     <div id="ov-trend"></div>
-    <div class="meta">Daily item counts as stacked columns. Server-aggregated from topic_trend_daily; refresh to update.</div>
     <div class="dsec" style="margin-top:22px">Public themes <span class="info" tabindex="0" role="button" aria-label="Word cloud help">i<span class="tip">Most-discussed themes in public posts across all tracked issues. Word size = how much that issue is discussed; colour = sentiment (red negative, amber mixed, green positive).</span></span></div>
     <div id="wordcloud"></div>
     <div class="dsec" style="margin-top:22px">Latest headlines <span class="info" tabindex="0" role="button" aria-label="Headlines help">i<span class="tip">The five most recent media articles. Tap to open the article, or open the News tab for the full feed.</span></span></div>
@@ -150,7 +149,7 @@
   <section id="sources"><div class="note">Where the corpus came from.</div><table id="src"><thead><tr><th>Source</th><th class="num">Items</th></tr></thead><tbody></tbody></table></section>
   <div class="loading" id="loading">Fetching live board…</div>
 </div>
-<div class="ov" id="ov"><div class="sheet"><div class="close"><div class="sharewrap"><button id="shareBtn">⤴ Share</button><div class="sharemenu" id="shareMenu"></div></div><div class="navgrp"><button id="navPrev" title="Previous issue (←)">‹ Prev</button><span id="navPos" class="navpos"></span><button id="navNext" title="Next issue (→)">Next ›</button><button onclick="closeDetail()">✕ Close</button></div></div><div id="detail"></div></div></div>
+<div class="ov" id="ov"><div class="sheet"><div class="close"><div class="sharewrap"><button id="shareBtn">⤴ Share</button><div class="sharemenu" id="shareMenu"></div></div><div class="navgrp"><button id="navPrev" title="Previous (←)" aria-label="Previous">‹</button><span id="navPos" class="navpos"></span><button id="navNext" title="Next (→)" aria-label="Next">›</button><button onclick="closeDetail()" title="Close (Esc)" aria-label="Close">✕</button></div></div><div id="detail"></div></div></div>
 <script>
 const SUPA="https://ymzyfsubemwgeboghtnk.supabase.co";
 const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inltenlmc3ViZW13Z2Vib2dodG5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwMzg4MTYsImV4cCI6MjA5NTYxNDgxNn0.yoCIS0YsX2VETNqHdSd7IP7QqkyCHTS_CazIo1zNFKI";
@@ -249,7 +248,8 @@ const STORY_SORTS={
   latest:(a,b)=>0};
 function sortedStories(){return [...STORIES].sort(STORY_SORTS[STORY_SORT]||STORY_SORTS.recent).map(s=>s.id);}
 let LENS='domain', FILTER={facet:null,tag:null}, NEWS=[], NEWS_KEY=null;
-function articleRow(a){return `<div class="feedrow"><a href="${a.u}" target="_blank" rel="noopener">${a.t} ↗</a><div class="fm"><span style="color:var(--ink);font-weight:600">${a.d}</span>${a.dom?`<span class="fchip">${a.dom}</span>`:''}${ragDot(a.sc)}</div></div>`;}
+function ragDotOnly(sc){const v=num(sc);const c=v<-0.1?'var(--red)':v>0.1?'var(--green)':'var(--amber)';return `<span style="color:${c}" title="${v<-0.1?'negative':v>0.1?'positive':'neutral'}">●</span>`;}
+function articleRow(a){return `<div class="feedrow"><a href="${a.u}" target="_blank" rel="noopener">${a.t} ↗</a><div class="fm"><span style="color:var(--ink);font-weight:600">${a.d}</span>${a.dom?`<span class="fchip">${a.dom}</span>`:''}${TLDR?ragDotOnly(a.sc):ragDot(a.sc)}</div></div>`;}
 function drawStories(){let arr=[...NEWS];if(STORY_SORT==='negative')arr.sort((a,b)=>num(a.sc)-num(b.sc));lazyList(document.getElementById("stories-list"),arr,articleRow,12);}
 function storiesKey(){return RANGE.from+'|'+RANGE.to+'|'+(FILTER.tag||'');}
 function drawFilterChip(){const r=document.getElementById("resetfilt");if(r)r.style.display=(FILTER&&FILTER.tag)?'':'none';}
@@ -455,11 +455,13 @@ function render(B){
   document.getElementById("loading").style.display="none";
   SUB_ITEMS=m.total; setSub();
   const flagged=B.issues.filter(i=>i.rag==='red'||i.rag==='amber').length;
+  const _tot=B.issues.length||1,_red=B.issues.filter(i=>i.rag==='red').length,_amb=B.issues.filter(i=>i.rag==='amber').length;
+  const _pubPct=m.total?Math.round(m.public/m.total*100):0,_newsPct=m.total?Math.round(m.news/m.total*100):0;
   document.getElementById("kpis").innerHTML=`
-    <div class="kpi"><div class="n">${m.total}</div><div class="l">Items</div><div class="x">Public ${m.public} · News ${m.news}</div></div>
-    <div class="kpi"><div class="n">${flagged}</div><div class="l">Issues</div><div class="x">red + amber</div></div>
-    <div class="kpi"><div class="n">${Math.round(m.avg_sent*100)}%</div><div class="l">Sentiment</div><div class="x">avg ${(+m.avg_sent).toFixed(2)}</div></div>
-    <div class="kpi"><div class="n">${m.official}</div><div class="l">Official refs</div><div class="x">in store</div></div>`;
+    <div class="kpi"><div class="n">${m.total}</div><div class="l">Items ${info("All items captured in this window — official sources, media articles and public posts/comments. Public% and News% are each side's share of the total.")}</div><div class="x">Public ${_pubPct}% · News ${_newsPct}%</div></div>
+    <div class="kpi"><div class="n">${flagged}</div><div class="l">Issues ${info("Tracked issues flagged red (negative reception) or amber (mixed). The dots show the share of all issues that are red and amber.")}</div><div class="x"><span style="color:var(--red)">●</span> ${Math.round(_red/_tot*100)}% <span style="color:var(--amber)">●</span> ${Math.round(_amb/_tot*100)}%</div></div>
+    <div class="kpi"><div class="n">${Math.round(m.avg_sent*100)}%</div><div class="l">Sentiment ${info("Average sentiment across all items, from −100% (negative) to +100% (positive). A qualitative read, not a precise measure.")}</div><div class="x">avg ${(+m.avg_sent).toFixed(2)}</div></div>
+    <div class="kpi"><div class="n">${m.official}</div><div class="l">Official refs ${info("Official sources captured (IMDA / CSA / POFMA / MOM) — the baseline the gap is measured against.")}</div><div class="x">in store</div></div>`;
   const red=B.issues.filter(i=>i.rag==='red').length,amb=B.issues.filter(i=>i.rag==='amber').length,grn=B.issues.filter(i=>i.rag==='green').length,gry=B.issues.filter(i=>i.rag==='grey').length,tot=B.issues.length;
   const flaggedIssues=B.issues.filter(i=>i.rag==='red'||i.rag==='amber');
   const loud=[...B.issues].sort((a,b)=>(b.public_n+b.media_n)-(a.public_n+a.media_n))[0];
