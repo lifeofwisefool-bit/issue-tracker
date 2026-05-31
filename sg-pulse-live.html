@@ -74,6 +74,9 @@
   .mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0 14px}.mgrid .m{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 10px;display:flex;flex-direction:column;min-height:68px}.mgrid .m .mhead{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}.mgrid .m .mic{color:var(--mut);flex:0 0 auto}.mgrid .m .mic svg{width:15px;height:15px}
   .mgrid .m .l{font-size:10px;color:var(--mut);line-height:1.2}.mgrid .m .n{font-size:16px;font-weight:700;margin-top:auto;padding-top:6px}
   .lanes{display:grid;grid-template-columns:1fr;gap:10px;margin:6px 0 18px}@media(min-width:620px){.lanes{grid-template-columns:repeat(3,1fr)}}
+  .gap2{display:grid;grid-template-columns:1fr;gap:10px;margin:6px 0 18px}@media(min-width:620px){.gap2{grid-template-columns:1fr 1fr}}.gpane .gapsum{font-size:12.5px;color:var(--ink)}
+  .hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .tldrbtn{border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;background:var(--card);color:var(--mut);white-space:nowrap;flex:none}.tldrbtn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
   .gapbox{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--card);margin:8px 0 18px}
   .gapsum{font-size:13px;color:var(--ink);line-height:1.8;margin-top:12px}
   .lane{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--card)}.lane h5{margin:0 0 6px;font-size:12px;color:var(--ink);display:flex;align-items:center;gap:6px}.lane p{margin:0;font-size:13px;color:var(--ink)}.lane .stance{font-size:11px;color:var(--mut);margin-top:6px}.lane.empty{border-style:dashed;opacity:.7}
@@ -112,16 +115,14 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>SG Digital Pulse — Sensing Dashboard</h1>
-  <p class="sub" id="sub">Loading live data…</p>
-  <div class="meta" id="capstat" style="margin-top:2px"></div>
+  <div class="hdr"><div><h1>Issue Tracker</h1><p class="sub" id="sub">Loading live data…</p></div><button id="tldr" class="tldrbtn" title="Condense everything to verdicts, counts and keywords">TL;DR</button></div>
   <nav class="tabs" id="tabs">
     <button data-v="overview" class="on">Overview</button>
     <button data-v="stories">News</button>
     <button data-v="incidents">Issues</button>
     <button data-v="sources">Sources</button>
   </nav>
-  <div class="range" id="range"><span data-d="1">24h</span><span data-d="2">2d</span><span data-d="30" class="on">30d</span><span data-d="cal">Calendar</span><span id="tldr" style="margin-left:auto" title="Condense everything to verdicts, counts and keywords">TL;DR</span></div>
+  <div class="range" id="range"><span data-d="1">24h</span><span data-d="2">2d</span><span data-d="30" class="on">30d</span><span data-d="cal">Calendar</span></div>
   <div class="range" id="calbar" style="display:none"><span style="border:none;padding:0">From</span><input type="date" id="calFrom"><span style="border:none;padding:0">to</span><input type="date" id="calTo"><button id="calApply">Apply</button></div>
   <section id="overview" class="on"><div class="kpis" id="kpis"></div><div id="ov-summary"></div>
     <div class="dsec" style="margin-top:18px">Sentiment over time <span class="info" tabindex="0" role="button" aria-label="Chart help">i<span class="tip">Daily counts of items stacked by sentiment — green positive, amber neutral, red negative. Hover or tap a bar for that day's breakdown.</span></span></div>
@@ -135,7 +136,7 @@
     <div style="margin-top:8px"><a href="#" id="morenews" class="lnk">More news →</a></div>
   </section>
   <section id="stories">
-    <div class="sortbar"><label for="ffacet">Filter</label><select id="ffacet"><option value="">all</option><option value="domain">Domain</option><option value="theme">Theme</option><option value="impact">Impact</option><option value="actor">Actor</option></select><select id="ftag"><option value="">all</option></select><label for="ssort" style="margin-left:auto">Sort</label><select id="ssort"><option value="latest">Latest</option><option value="recent">Most active</option><option value="volume">Volume</option><option value="rag">Priority</option><option value="negative">Most negative</option></select></div>
+    <div class="sortbar"><label for="ffacet">Filter</label><select id="ffacet"><option value="">All</option><option value="domain">Domain</option><option value="theme">Theme</option><option value="impact">Impact</option><option value="actor">Actor</option></select><select id="ftag" style="display:none"><option value="">all</option></select><label for="ssort" style="margin-left:auto">Sort</label><select id="ssort"><option value="latest">Latest</option><option value="recent">Most active</option><option value="volume">Volume</option><option value="rag">Priority</option><option value="negative">Most negative</option></select></div>
     <div id="stories-list"></div></section>
   <section id="incidents">
     <div id="incfilter" style="margin:6px 0"></div>
@@ -189,6 +190,19 @@ function rulerHTML(pins,verdict,v){
   const band=v==='red'?'var(--red)':v==='green'?'var(--green)':'var(--amber)';
   const ps=pins.map(p=>`<div class="pin" style="left:${pctX(p.x)}%"><i style="background:${p.c}"></i><span style="color:${p.c}">${p.t}</span></div>`).join('');
   return `<div class="ruler"><div class="rh"><b>Tone of reception</b><span class="vb ${v}">${verdict}</span></div><div class="track"><div class="base"></div><div class="span" style="left:${lo}%;width:${w}%;background:${band}"></div>${ps}</div><div class="rends"><span>negative</span><span>positive</span></div></div>`;
+}
+function gapPane(label,off,otherSent,otherN,gp){
+  const head=`Official ↔ ${label}`;
+  if(!off) return `<div class="lane gpane empty"><h5>${head}</h5><p style="font-size:12px;color:var(--mut)">No official line captured — gap not assessed.</p></div>`;
+  if(!otherN||otherSent==null) return `<div class="lane gpane empty"><h5>${head}</h5><p style="font-size:12px;color:var(--mut)">No ${label.toLowerCase()} captured in this window.</p></div>`;
+  const pins=[{t:'Official',x:num(off.sent),c:'var(--accent)'},{t:label,x:num(otherSent),c:label==='Public'?'var(--mut)':'var(--ink)'}];
+  const xs=pins.map(p=>pctX(p.x));const lo=Math.min(...xs),w=Math.max(2,Math.max(...xs)-lo);
+  const band=gp.v==='red'?'var(--red)':gp.v==='green'?'var(--green)':'var(--amber)';
+  const ps=pins.map(p=>`<div class="pin" style="left:${pctX(p.x)}%"><i style="background:${p.c}"></i><span style="color:${p.c}">${p.t}</span></div>`).join('');
+  return `<div class="lane gpane"><h5>${head} <span class="vb ${gp.v}">${gp.verdict}</span></h5>`
+    +`<div class="track"><div class="base"></div><div class="span" style="left:${lo}%;width:${w}%;background:${band}"></div>${ps}</div>`
+    +`<div class="rends"><span>negative</span><span>positive</span></div>`
+    +`<div class="gapsum" style="margin-top:10px">${strip(gp.detail||'')}</div></div>`;
 }
 function issueRow(s){
   if(TLDR){
@@ -306,13 +320,13 @@ async function openDetail(topic,kind){
   const pubBox=d.public_n>0?`<p>${briefOK(d.public_n)&&sm.pub?sm.pub:(pubGist?'Public posts said: '+pubGist:`${d.public_n} public post${d.public_n>1?'s':''}, ${moodWord(d.pub_sent)} tone.`)}</p><div class="stance">${d.public_n} item${d.public_n!==1?'s':''} · ${moodWord(d.pub_sent)}</div>`:`<p>No public discussion in this window.</p>`;
   const pins=[];if(off&&off.sent!=null)pins.push({t:'Official',x:num(off.sent),c:'var(--accent)'});if(d.media_n>0)pins.push({t:'Media',x:num(d.med_sent),c:'var(--ink)'});if(d.public_n>0)pins.push({t:'Public',x:num(d.pub_sent),c:'var(--mut)'});
   const gapPair=(label,n,cs,insight,kwCp)=>{
-    if(!off) return {t:`<b>Official ↔ ${label}:</b> no official line — not assessed`,short:`<b>${label}:</b> no official line`,v:'amber'};
-    if(!n||cs==null) return {t:`<b>Official ↔ ${label}:</b> not enough data (no ${label.toLowerCase()} in this window)`,short:`<b>${label}:</b> no data`,v:'amber'};
+    if(!off) return {t:`<b>Official ↔ ${label}:</b> no official line — not assessed`,short:`<b>${label}:</b> no official line`,v:'amber',verdict:'no official line',detail:'No official line captured — gap not assessed.'};
+    if(!n||cs==null) return {t:`<b>Official ↔ ${label}:</b> not enough data (no ${label.toLowerCase()} in this window)`,short:`<b>${label}:</b> no data`,v:'amber',verdict:'no data',detail:`No ${label.toLowerCase()} captured in this window.`};
     const dist=Math.abs(num(off.sent)-num(cs)); const verdict=dist>0.3?'divergence':'aligned'; const vv=dist>0.3?'red':'green';
-    const detail=(insight&&n>=3)?insight:`${label.toLowerCase()} reception runs ${num(cs)<num(off.sent)?'more negative':'more positive'} than the official tone`;
+    const detail=(insight&&n>=3)?insight:`${label} reception runs ${num(cs)<num(off.sent)?'more negative':'more positive'} than the official tone.`;
     const offK=kwShort(sm.kw_off,3), cpK=kwShort(kwCp,3);
     const short=(offK&&cpK)?`<b>${label} — ${verdict}:</b> ${offK} ↔ ${cpK}`:`<b>${label} — ${verdict}:</b> ${clipW(detail,10)}`;
-    return {t:`<b>Official ↔ ${label} — ${verdict}:</b> ${detail}`,short,v:vv};
+    return {t:`<b>Official ↔ ${label} — ${verdict}:</b> ${detail}`,short,v:vv,verdict,detail:TLDR?(short.replace(/<\/?b>/g,'')):detail};
   };
   const gPub=gapPair('Public',d.public_n,d.pub_sent,sm.gap_pub,sm.kw_pub), gMed=gapPair('Media',d.media_n,d.med_sent,sm.gap_med,sm.kw_med);
   let v,verdict;
@@ -335,7 +349,8 @@ async function openDetail(topic,kind){
     ${metrics}${sbar}
     <div class="dsec">Compare — official · media · public ${info("What each side said — the official statement, the media coverage, and the public reaction. In TL;DR mode these condense to keyword tags.")}</div>
     <div class="lanes"><div class="lane off ${off?'':'empty'}"><h5><span class="ic">${ICON.landmark}</span>Official</h5>${oB}</div><div class="lane med ${d.media_n>0?'':'empty'}"><h5><span class="ic">${ICON.news}</span>Media</h5>${mB}</div><div class="lane pub"><h5><span class="ic">${ICON.users}</span>Public</h5>${pB}</div></div>
-    <div class="gapbox"><div class="dsec" style="margin-top:0">The gap ${info("How far the official tone sits from how the public and media received it, on a negative→positive scale. Flagged 'divergence' when they differ by more than 0.3, 'aligned' when close. Each side is compared to the official line separately. Sentiment is a qualitative read, not a precise measure.")}</div>${rulerHTML(pins,verdict,v)}<div class="gapsum">${strip(gapSummary)}</div></div>
+    <div class="dsec">The gap ${info("How far the official tone sits from how the public and media received it, on a negative→positive scale. 'Divergence' when they differ by more than 0.3, 'aligned' when close. Each side is compared to the official line separately. Sentiment is a qualitative read, not a precise measure.")}</div>
+    <div class="gap2">${gapPane('Public',off,d.pub_sent,d.public_n,gPub)}${gapPane('Media',off,d.med_sent,d.media_n,gMed)}</div>
     ${verb}
     <div class="meta" style="margin-top:16px;border-top:1px solid var(--barbg);padding-top:8px">${kind==='story'&&d.trig?'Trigger '+d.trig+(facetLine(d)?' · ':''):''}${facetLine(d)?'Facets — '+facetLine(d):''}</div>`;
 }
@@ -426,14 +441,13 @@ function lazyList(container, items, rowFn, batch){
   container._obs=obs;
   if(items.length) obs.observe(sent); else container.innerHTML='<div class="meta">Nothing in this window.</div>';
 }
-function loadCapStatus(){const el=document.getElementById("capstat");if(!el)return;
-  rpc('get_capture_status').then(s=>{ if(!s){el.textContent='';return;}
-    el.innerHTML=`Last capture ${s.last_capture||'—'}`;
-  }).catch(()=>{el.textContent='';});}
+function loadCapStatus(){ rpc('get_capture_status').then(s=>{ if(s&&s.last_capture){LAST_CAP=s.last_capture; setSub();} }).catch(()=>{});}
+let SUB_ITEMS=0,LAST_CAP='';
+function setSub(){const el=document.getElementById("sub");if(el)el.textContent='Live · '+SUB_ITEMS+' items'+(LAST_CAP?' · captured '+LAST_CAP:'');}
 function render(B){
   BOARD=B;const m=B.meta;
   document.getElementById("loading").style.display="none";
-  document.getElementById("sub").textContent=`Live · ${m.total} items · as of ${new Date(m.generated).toLocaleString('en-SG',{dateStyle:'medium',timeStyle:'short'})}`;
+  SUB_ITEMS=m.total; setSub();
   const flagged=B.issues.filter(i=>i.rag==='red'||i.rag==='amber').length;
   document.getElementById("kpis").innerHTML=`
     <div class="kpi"><div class="n">${m.total}</div><div class="l">Items</div><div class="x">Public ${m.public} · News ${m.news}</div></div>
@@ -456,7 +470,7 @@ function render(B){
 document.getElementById("tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id===b.dataset.v));window.scrollTo(0,0);if(b.dataset.v==='overview')renderCloud();if(b.dataset.v==='stories')renderStories();if(b.dataset.v==='incidents')renderIncidents();if(window.gtag)gtag('event','tab_view',{tab:b.dataset.v});});
 document.getElementById("ssort").addEventListener("change",e=>{STORY_SORT=e.target.value;drawStories();});
 document.getElementById("isort").addEventListener("change",e=>{ISORT=e.target.value;drawIncidents();});
-document.getElementById("ffacet").addEventListener("change",e=>{const f=e.target.value;const ft=document.getElementById("ftag");if(!f){FILTER={facet:null,tag:null};ft.innerHTML='<option value="">all</option>';renderStories();return;}FILTER={facet:f,tag:null};populateFTags(f);renderStories();});
+document.getElementById("ffacet").addEventListener("change",e=>{const f=e.target.value;const ft=document.getElementById("ftag");if(!f){ft.style.display='none';ft.innerHTML='<option value="">all</option>';FILTER={facet:null,tag:null};renderStories();return;}ft.style.display='';FILTER={facet:f,tag:null};populateFTags(f);renderStories();});
 document.getElementById("ftag").addEventListener("change",e=>{const t=e.target.value;const f=document.getElementById("ffacet").value||null;FILTER={facet:f,tag:t||null};renderStories();});
 (function(){const el=document.getElementById('ov-trend');if(!el)return;const show=e=>{const r=e.target.closest&&e.target.closest('rect.th');if(!r){trendTip.style.display='none';return;}const b=el.getBoundingClientRect();trendTip.innerHTML=`<b>${fdate(r.getAttribute('data-d'))}</b><br><span style="color:var(--green)">●</span> ${r.getAttribute('data-p')} positive · <span style="color:var(--amber)">●</span> ${r.getAttribute('data-u')} neutral · <span style="color:var(--red)">●</span> ${r.getAttribute('data-g')} negative`;trendTip.style.display='block';let lx=e.clientX-b.left+10;lx=Math.min(lx,b.width-170);trendTip.style.left=Math.max(2,lx)+'px';trendTip.style.top=Math.max(2,e.clientY-b.top-14)+'px';};el.addEventListener('pointermove',show);el.addEventListener('pointerdown',show);el.addEventListener('pointerleave',()=>{trendTip.style.display='none';});})();
 function applyTldr(){const b=document.getElementById("tldr");if(b){b.classList.toggle("on",TLDR);b.textContent=TLDR?"TL;DR ✓":"TL;DR";}document.body.classList.toggle("tldr",TLDR);}
