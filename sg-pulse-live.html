@@ -128,8 +128,9 @@
   <div class="drawer" id="controls" hidden>
     <div class="range" id="range"><span data-d="1">24h</span><span data-d="2">2d</span><span data-d="30" class="on">30d</span><span data-d="cal">Calendar</span></div>
     <div class="range" id="calbar" style="display:none"><span style="border:none;padding:0">From</span><input type="date" id="calFrom"><span style="border:none;padding:0">to</span><input type="date" id="calTo"><button id="calApply">Apply</button></div>
-    <div class="sortbar"><label for="ffacet">Filter</label><select id="ffacet"><option value="">All</option><option value="domain">Domain</option><option value="theme">Theme</option><option value="impact">Impact</option><option value="actor">Actor</option></select><select id="ftag" style="display:none"><option value="">all</option></select></div>
+    <div class="sortbar"><label for="ffacet">Filter</label><select id="ffacet"><option value="">All</option><option value="domain">Domain</option><option value="theme">Theme</option><option value="impact">Impact</option><option value="actor">Actor</option></select><select id="ftag" style="display:none"><option value="">All</option></select></div>
     <div class="sortbar"><label for="ssort">Sort</label><select id="ssort"><option value="latest">Latest</option><option value="recent">Most active</option><option value="volume">Volume</option><option value="rag">Priority</option><option value="negative">Most negative</option></select></div>
+    <button id="resetfilt" class="tldrbtn" style="display:none">Reset filters</button>
   </div>
   <section id="overview" class="on"><div class="kpis" id="kpis"></div><div id="ov-summary"></div>
     <div class="dsec" style="margin-top:18px">Sentiment over time <span class="info" tabindex="0" role="button" aria-label="Chart help">i<span class="tip">Daily counts of items stacked by sentiment — green positive, amber neutral, red negative. Hover or tap a bar for that day's breakdown.</span></span></div>
@@ -145,7 +146,6 @@
   <section id="stories">
     <div id="stories-list"></div></section>
   <section id="incidents">
-    <div id="incfilter" style="margin:6px 0"></div>
     <div id="incidents-list"></div></section>
   <section id="sources"><div class="note">Where the corpus came from.</div><table id="src"><thead><tr><th>Source</th><th class="num">Items</th></tr></thead><tbody></tbody></table></section>
   <div class="loading" id="loading">Fetching live board…</div>
@@ -248,10 +248,11 @@ const STORY_SORTS={
   negative:(a,b)=>num(a.sent)-num(b.sent),
   latest:(a,b)=>0};
 function sortedStories(){return [...STORIES].sort(STORY_SORTS[STORY_SORT]||STORY_SORTS.recent).map(s=>s.id);}
-let LENS='domain', FILTER={facet:null,tag:null};
-function drawStories(){lazyList(document.getElementById("stories-list"),[...STORIES].sort(STORY_SORTS[STORY_SORT]||STORY_SORTS.recent),s=>storyRow(s,'news'),8);}
+let LENS='domain', FILTER={facet:null,tag:null}, NEWS=[], NEWS_KEY=null;
+function articleRow(a){return `<div class="feedrow"><a href="${a.u}" target="_blank" rel="noopener">${a.t} ↗</a><div class="fm"><span style="color:var(--ink);font-weight:600">${a.d}</span>${a.dom?`<span class="fchip">${a.dom}</span>`:''}${ragDot(a.sc)}</div></div>`;}
+function drawStories(){let arr=[...NEWS];if(STORY_SORT==='negative')arr.sort((a,b)=>num(a.sc)-num(b.sc));lazyList(document.getElementById("stories-list"),arr,articleRow,12);}
 function storiesKey(){return RANGE.from+'|'+RANGE.to+'|'+(FILTER.tag||'');}
-function drawFilterChip(){const html=FILTER.tag?`<span class="meta">Filtered by ${FILTER.facet}: </span><span class="kw clearfilter" style="cursor:pointer">${FILTER.tag} ✕</span>`:'';["newsfilter","incfilter"].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});}
+function drawFilterChip(){const r=document.getElementById("resetfilt");if(r)r.style.display=(FILTER&&FILTER.tag)?'':'none';}
 let ISORT='recent';
 function drawIncidents(){const el=document.getElementById("incidents-list");const promoted=[...STORIES].filter(s=>s.promoted).sort(STORY_SORTS[STORY_SORT]||STORY_SORTS.recent);if(!promoted.length){el.innerHTML='<div class="meta">No tracked incidents in this window'+(FILTER.tag?' for '+FILTER.tag:'')+'.</div>';return;}lazyList(el,promoted,s=>storyRow(s,'topic'),8);}
 function renderIncidents(){drawFilterChip();if(STORIES_KEY!==storiesKey())document.getElementById("incidents-list").innerHTML='<div class="meta">Loading incidents…</div>';ensureStories(drawIncidents);}
@@ -260,7 +261,7 @@ function ensureStories(cb){
   if(STORIES_KEY===k){cb();return;}
   rpc('get_stories',{p_from:RANGE.from,p_to:RANGE.to,p_facet:FILTER.facet,p_tag:FILTER.tag}).then(rows=>{STORIES=rows||[];STORIES_KEY=k;cb();}).catch(()=>{});
 }
-function renderStories(){drawFilterChip();if(STORIES_KEY!==storiesKey())document.getElementById("stories-list").innerHTML='<div class="meta">Loading news…</div>';ensureStories(drawStories);}
+function renderStories(){drawFilterChip();const k=RANGE.from+'|'+RANGE.to+'|'+(FILTER.tag||'');if(NEWS_KEY!==k){document.getElementById("stories-list").innerHTML='<div class="meta">Loading news…</div>';rpc('get_news',{p_from:RANGE.from,p_to:RANGE.to,p_facet:FILTER.facet,p_tag:FILTER.tag}).then(rows=>{NEWS=rows||[];NEWS_KEY=k;drawStories();}).catch(e=>{document.getElementById("stories-list").innerHTML='<div class="onreq">Could not load news: '+e.message+'</div>';});}else drawStories();}
 function renderFacetBoard(){
   const el=document.getElementById("issues-list");el.innerHTML='<div class="meta">Loading board…</div>';
   rpc('get_facets',{p_facet:LENS,p_from:RANGE.from,p_to:RANGE.to}).then(rows=>{
@@ -270,7 +271,7 @@ function renderFacetBoard(){
 }
 function populateFTags(facet,sel){const ft=document.getElementById("ftag");if(!ft)return Promise.resolve();
   return rpc('get_facets',{p_facet:facet,p_from:RANGE.from,p_to:RANGE.to}).then(rows=>{
-    ft.innerHTML='<option value="">all</option>'+(rows||[]).map(f=>`<option value="${String(f.tag).replace(/"/g,'&quot;')}">${f.tag}</option>`).join('');
+    ft.innerHTML='<option value="">All</option>'+(rows||[]).map(f=>`<option value="${String(f.tag).replace(/"/g,'&quot;')}">${f.tag}</option>`).join('');
     ft.value=sel||'';
   }).catch(()=>{});}
 function applyFacetFilter(facet,tag){ FILTER={facet,tag};
@@ -468,15 +469,16 @@ function render(B){
   const _tr=document.getElementById("ov-trend");_tr.innerHTML=trendSVG(B.trend);_tr.appendChild(trendTip);
   document.getElementById("wordcloud").innerHTML='<div class="meta">Loading themes…</div>';
   rpc('get_wordcloud',{p_from:RANGE.from,p_to:RANGE.to}).then(renderCloud).catch(()=>{});
-  lazyList(document.getElementById("feed"),(B.feed||[]).slice(0,5),f=>`<div class="feedrow"><a href="${f.u}" target="_blank" rel="noopener">${f.t} ↗</a><div class="fm"><span style="color:var(--ink);font-weight:600">${fdate(f.d)}${f.tm?', '+f.tm:''}</span><span class="fchip">${nameOf(f.tp)}</span>${ragDot(f.sc)}</div></div>`,10);
+  rpc('get_news',{p_from:RANGE.from,p_to:RANGE.to}).then(rows=>{document.getElementById("feed").innerHTML=(rows||[]).slice(0,5).map(articleRow).join('')||'<div class="meta">No articles in this window.</div>';}).catch(()=>{});
   document.querySelector("#src tbody").innerHTML=(B.sources||[]).map(s=>`<tr><td>${s.s}</td><td class="num">${s.n}</td></tr>`).join('')+`<tr><td><strong>Total</strong></td><td class="num"><strong>${m.total}</strong></td></tr>`;
   loadCapStatus();updateCtrlSum();
 }
 document.getElementById("tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id===b.dataset.v));window.scrollTo(0,0);if(b.dataset.v==='overview')renderCloud();if(b.dataset.v==='stories')renderStories();if(b.dataset.v==='incidents')renderIncidents();if(window.gtag)gtag('event','tab_view',{tab:b.dataset.v});});
 document.getElementById("ssort").addEventListener("change",e=>{STORY_SORT=e.target.value;if(document.getElementById("incidents").classList.contains("on"))drawIncidents();else drawStories();updateCtrlSum();});
 document.getElementById("filtbtn").addEventListener("click",()=>{const c=document.getElementById("controls");c.hidden=!c.hidden;});
+document.getElementById("resetfilt").addEventListener("click",()=>{const ff=document.getElementById("ffacet"),ft=document.getElementById("ftag");ff.value='';ft.style.display='none';ft.innerHTML='<option value="">All</option>';FILTER={facet:null,tag:null};refreshActiveList();updateCtrlSum();drawFilterChip();});
 function updateCtrlSum(){const el=document.getElementById("ctrlsum");if(!el)return;const rs=document.querySelector('#range span.on');const range=rs?rs.textContent:'30d';const filt=FILTER&&FILTER.tag?(FILTER.facet+': '+FILTER.tag):'All';const so=document.getElementById("ssort");const sort=so?so.options[so.selectedIndex].text:'';el.textContent=`${range} · ${filt} · ${sort}`;}
-document.getElementById("ffacet").addEventListener("change",e=>{const f=e.target.value;const ft=document.getElementById("ftag");if(!f){ft.style.display='none';ft.innerHTML='<option value="">all</option>';FILTER={facet:null,tag:null};refreshActiveList();updateCtrlSum();return;}ft.style.display='';FILTER={facet:f,tag:null};populateFTags(f);refreshActiveList();updateCtrlSum();});
+document.getElementById("ffacet").addEventListener("change",e=>{const f=e.target.value;const ft=document.getElementById("ftag");if(!f){ft.style.display='none';ft.innerHTML='<option value="">All</option>';FILTER={facet:null,tag:null};refreshActiveList();updateCtrlSum();return;}ft.style.display='';FILTER={facet:f,tag:null};populateFTags(f);refreshActiveList();updateCtrlSum();});
 document.getElementById("ftag").addEventListener("change",e=>{const t=e.target.value;const f=document.getElementById("ffacet").value||null;FILTER={facet:f,tag:t||null};refreshActiveList();updateCtrlSum();});
 function refreshActiveList(){if(document.getElementById("incidents").classList.contains("on"))renderIncidents();else renderStories();}
 (function(){const el=document.getElementById('ov-trend');if(!el)return;const show=e=>{const r=e.target.closest&&e.target.closest('rect.th');if(!r){trendTip.style.display='none';return;}const b=el.getBoundingClientRect();trendTip.innerHTML=`<b>${fdate(r.getAttribute('data-d'))}</b><br><span style="color:var(--green)">●</span> ${r.getAttribute('data-p')} positive · <span style="color:var(--amber)">●</span> ${r.getAttribute('data-u')} neutral · <span style="color:var(--red)">●</span> ${r.getAttribute('data-g')} negative`;trendTip.style.display='block';let lx=e.clientX-b.left+10;lx=Math.min(lx,b.width-170);trendTip.style.left=Math.max(2,lx)+'px';trendTip.style.top=Math.max(2,e.clientY-b.top-14)+'px';};el.addEventListener('pointermove',show);el.addEventListener('pointerdown',show);el.addEventListener('pointerleave',()=>{trendTip.style.display='none';});})();
@@ -504,7 +506,7 @@ document.addEventListener("click",e=>{if(!e.target.closest(".sharewrap"))closeSh
 window.addEventListener("hashchange",handleHash);
 let RANGE={from:null,to:null};
 function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-function loadBoard(){STORIES_KEY=null;const L=document.getElementById("loading");L.style.display="block";L.textContent="Loading…";rpc('get_board',{p_from:RANGE.from,p_to:RANGE.to}).then(render).catch(e=>{L.textContent="Could not load live data: "+e.message+". (Check network / login.)";});if(document.getElementById("stories").classList.contains("on"))renderStories();if(document.getElementById("incidents").classList.contains("on"))renderIncidents();}
+function loadBoard(){STORIES_KEY=null;NEWS_KEY=null;const L=document.getElementById("loading");L.style.display="block";L.textContent="Loading…";rpc('get_board',{p_from:RANGE.from,p_to:RANGE.to}).then(render).catch(e=>{L.textContent="Could not load live data: "+e.message+". (Check network / login.)";});if(document.getElementById("stories").classList.contains("on"))renderStories();if(document.getElementById("incidents").classList.contains("on"))renderIncidents();}
 function setDays(days){const to=new Date();const from=new Date();from.setDate(from.getDate()-(days-1));RANGE={from:ymd(from),to:ymd(to)};loadBoard();}
 document.getElementById("range").addEventListener("click",e=>{const b=e.target.closest("span[data-d]");if(!b)return;const cal=document.getElementById("calbar");
   if(b.dataset.d==='cal'){cal.style.display=cal.style.display==='none'?'flex':'none';return;}
