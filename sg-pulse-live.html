@@ -118,6 +118,7 @@
   <nav class="tabs" id="tabs">
     <button data-v="overview" class="on">Overview</button>
     <button data-v="stories">News</button>
+    <button data-v="incidents">Incidents</button>
     <button data-v="issues">Topics</button>
     <button data-v="sources">Sources</button>
   </nav>
@@ -134,10 +135,15 @@
     <div class="meta" style="margin-bottom:6px">Newest first. Tap to open the article.</div>
     <div id="feed"></div>
   </section>
-  <section id="stories"><div class="note">News — distinct events clustered from official, media and public signal (so 15 near-identical articles show as one event, not a repeating list). An event becomes a tracked Topic once the public engages with it. Tap for the gap and sources.</div>
-    <div class="sortbar"><label for="ssort">Sort</label><select id="ssort"><option value="recent">Most active</option><option value="volume">Volume</option><option value="rag">Priority</option><option value="negative">Most negative</option></select></div>
+  <section id="stories"><div class="note">News — distinct events clustered from official, media and public signal (so 15 near-identical articles show as one event, not a repeating list). Tap an event for its media coverage.</div>
+    <div class="sortbar"><label for="ffacet">Filter</label><select id="ffacet"><option value="">— facet —</option><option value="domain">Domain</option><option value="theme">Theme</option><option value="impact">Impact</option><option value="actor">Actor</option></select><select id="ftag"><option value="">all</option></select><label for="ssort" style="margin-left:auto">Sort</label><select id="ssort"><option value="recent">Most active</option><option value="volume">Volume</option><option value="rag">Priority</option><option value="negative">Most negative</option></select></div>
     <div id="stories-list"></div></section>
-  <section id="issues"><div class="note">Topics — events we are actively tracking, grouped under their category. An event is promoted here from News once the public engages (≥3 public posts/comments, or high engagement). Each carries its own official-vs-public gap.</div>
+  <section id="incidents"><div class="note">Incidents — events we are actively tracking. Sequence A = IMDA/official acted; B = external signal, no official line yet; C = B then official responded. Tap one for the Official · Media · Public comparison and the gap.</div>
+    <div id="incfilter" style="margin:6px 0"></div>
+    <div class="sortbar"><label for="isort">Sort</label><select id="isort"><option value="recent">Most active</option><option value="volume">Volume</option><option value="rag">Priority</option><option value="negative">Most negative</option></select></div>
+    <div id="incidents-list"></div></section>
+  <section id="issues"><div class="note">Topics — the sensing board by facet. A mention carries several tags, so the same event can appear under more than one. Tap a tag to see its events in News.</div>
+    <div class="range" id="lensbar"><span data-l="domain" class="on">Domain</span><span data-l="theme">Theme</span><span data-l="impact">Impact</span><span data-l="actor">Actor</span></div>
     <div id="issues-list"></div></section>
   <section id="sources"><div class="note">Where the corpus came from.</div><table id="src"><thead><tr><th>Source</th><th class="num">Items</th></tr></thead><tbody></tbody></table></section>
   <div class="loading" id="loading">Fetching live board…</div>
@@ -207,16 +213,17 @@ const ISSUE_SORTS={
   topic:(a,b)=>nameOf(a.topic).localeCompare(nameOf(b.topic))};
 let CURRENT_SORT='rag';
 function sortedTopics(){return BOARD?[...BOARD.issues].sort(ISSUE_SORTS[CURRENT_SORT]||ISSUE_SORTS.rag).map(i=>i.topic):[];}
+function facetLine(d){const seg=(l,a)=>a&&a.length?l+': '+a.join(', '):null;return [seg('Domain',d.domains),seg('Theme',d.themes),seg('Impact',d.impacts),seg('Actor',d.actors)].filter(Boolean).join('  ·  ');}
 function storyRow(s,kind){
   const da=kind==='news'?`data-media="${encodeURIComponent(s.id)}"`:`data-story="${encodeURIComponent(s.id)}"`;
-  const cats=(s.cats||[]).map(nameOf).join(' · ');
+  const tagHtml=[...(s.domains||[]),...(s.themes||[])].slice(0,5).map(x=>`<span class="kw">${x}</span>`).join(' ');
   const vol=s.public_n+s.media_n;
   const sc=s.status==='active'?'var(--accent)':s.status==='emerging'?'var(--amber)':'var(--mut)';
   const stat=(kind!=='news'&&s.status)?`<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;border:1px solid ${sc};color:${sc}">${s.status}</span>`:'';
   if(TLDR)return `<div class="row" ${da}><span class="dot d-${s.rag}"></span><span class="t" style="flex:1">${s.title}</span>${stat}<span class="meta" style="margin:0">${moodWord(s.sent)} · ${vol}</span><span class="chev">›</span></div>`;
   const g=s.media_n>0?` · media ${s.media_n}`:'';
   const cta=kind==='news'?'Coverage ›':'Details ›';
-  return `<div class="row" ${da}><span class="dot d-${s.rag}"></span><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="t">${s.title}</span>${stat}</div><div class="c">${cats||'—'}</div><div class="meta">public ${s.public_n}${g} · ${moodWord(s.sent)} · last ${s.last}</div></div><span class="chev">${cta}</span></div>`;
+  return `<div class="row" ${da}><span class="dot d-${s.rag}"></span><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="t">${s.title}</span>${stat}</div><div class="c" style="display:flex;flex-wrap:wrap;gap:4px;margin:3px 0">${tagHtml||'—'}</div><div class="meta">public ${s.public_n}${g} · ${moodWord(s.sent)} · last ${s.last}</div></div><span class="chev">${cta}</span></div>`;
 }
 const STAT_ORD={active:0,emerging:1,quiet:2};
 const STORY_SORTS={
@@ -225,22 +232,37 @@ const STORY_SORTS={
   rag:(a,b)=>(RAG_ORD[a.rag]-RAG_ORD[b.rag])||((b.public_n+b.media_n)-(a.public_n+a.media_n)),
   negative:(a,b)=>num(a.sent)-num(b.sent)};
 function sortedStories(){return [...STORIES].sort(STORY_SORTS[STORY_SORT]||STORY_SORTS.recent).map(s=>s.id);}
+let LENS='domain', FILTER={facet:null,tag:null};
 function drawStories(){lazyList(document.getElementById("stories-list"),[...STORIES].sort(STORY_SORTS[STORY_SORT]||STORY_SORTS.recent),s=>storyRow(s,'news'),8);}
-function drawTopics(){
-  const el=document.getElementById("issues-list");
-  const promoted=STORIES.filter(s=>s.promoted);
-  if(!promoted.length){el.innerHTML='<div class="meta">No tracked Topics yet. An event becomes a Topic once the public engages with it (≥3 public posts/comments, or high engagement); until then it sits under News.</div>';return;}
-  const groups={};
-  promoted.forEach(s=>{const c=nameOf(s.cat||(s.cats&&s.cats[0])||'Other'); (groups[c]=groups[c]||[]).push(s);});
-  el.innerHTML=Object.keys(groups).sort().map(c=>`<div class="dsec" style="margin-top:14px">${c} <span class="meta" style="font-weight:400">· ${groups[c].length}</span></div>`+groups[c].sort((a,b)=>(b.public_n+b.media_n)-(a.public_n+a.media_n)).map(s=>storyRow(s,'topic')).join('')).join('');
-}
+function storiesKey(){return RANGE.from+'|'+RANGE.to+'|'+(FILTER.tag||'');}
+function drawFilterChip(){const html=FILTER.tag?`<span class="meta">Filtered by ${FILTER.facet}: </span><span class="kw clearfilter" style="cursor:pointer">${FILTER.tag} ✕</span>`:'';["newsfilter","incfilter"].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});}
+let ISORT='recent';
+function drawIncidents(){const el=document.getElementById("incidents-list");const promoted=[...STORIES].filter(s=>s.promoted).sort(STORY_SORTS[ISORT]||STORY_SORTS.recent);if(!promoted.length){el.innerHTML='<div class="meta">No tracked incidents in this window'+(FILTER.tag?' for '+FILTER.tag:'')+'.</div>';return;}lazyList(el,promoted,s=>storyRow(s,'topic'),8);}
+function renderIncidents(){drawFilterChip();if(STORIES_KEY!==storiesKey())document.getElementById("incidents-list").innerHTML='<div class="meta">Loading incidents…</div>';ensureStories(drawIncidents);}
 function ensureStories(cb){
-  const key=RANGE.from+'|'+RANGE.to;
-  if(STORIES_KEY===key){cb();return;}
-  rpc('get_stories',{p_from:RANGE.from,p_to:RANGE.to}).then(rows=>{STORIES=rows||[];STORIES_KEY=key;cb();}).catch(()=>{});
+  const k=storiesKey();
+  if(STORIES_KEY===k){cb();return;}
+  rpc('get_stories',{p_from:RANGE.from,p_to:RANGE.to,p_facet:FILTER.facet,p_tag:FILTER.tag}).then(rows=>{STORIES=rows||[];STORIES_KEY=k;cb();}).catch(()=>{});
 }
-function renderStories(){if(STORIES_KEY!==RANGE.from+'|'+RANGE.to)document.getElementById("stories-list").innerHTML='<div class="meta">Loading news…</div>';ensureStories(drawStories);}
-function renderTopics(){if(STORIES_KEY!==RANGE.from+'|'+RANGE.to)document.getElementById("issues-list").innerHTML='<div class="meta">Loading topics…</div>';ensureStories(drawTopics);}
+function renderStories(){drawFilterChip();if(STORIES_KEY!==storiesKey())document.getElementById("stories-list").innerHTML='<div class="meta">Loading news…</div>';ensureStories(drawStories);}
+function renderFacetBoard(){
+  const el=document.getElementById("issues-list");el.innerHTML='<div class="meta">Loading board…</div>';
+  rpc('get_facets',{p_facet:LENS,p_from:RANGE.from,p_to:RANGE.to}).then(rows=>{
+    if(!rows||!rows.length){el.innerHTML='<div class="meta">No tagged items in this window.</div>';return;}
+    el.innerHTML=rows.map(f=>`<div class="row" data-facet="${LENS}" data-tag="${encodeURIComponent(f.tag)}"><span class="dot d-${f.rag}"></span><div style="flex:1"><span class="t">${f.tag}</span><div class="meta">public ${f.public_n} · media ${f.media_n} · ${moodWord(f.sent)}</div></div><span class="chev">${f.n} ›</span></div>`).join('');
+  }).catch(e=>{el.innerHTML='<div class="onreq">Could not load board: '+e.message+'</div>';});
+}
+function populateFTags(facet,sel){const ft=document.getElementById("ftag");if(!ft)return Promise.resolve();
+  return rpc('get_facets',{p_facet:facet,p_from:RANGE.from,p_to:RANGE.to}).then(rows=>{
+    ft.innerHTML='<option value="">all</option>'+(rows||[]).map(f=>`<option value="${String(f.tag).replace(/"/g,'&quot;')}">${f.tag} (${f.n})</option>`).join('');
+    ft.value=sel||'';
+  }).catch(()=>{});}
+function applyFacetFilter(facet,tag){ FILTER={facet,tag};
+  const ff=document.getElementById("ffacet"); if(ff){ff.value=facet; populateFTags(facet,tag);}
+  const tabs=document.getElementById("tabs"); [...tabs.children].forEach(x=>x.classList.toggle("on",x.dataset.v==='stories'));
+  document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id==='stories'));
+  window.scrollTo(0,0); renderStories(); }
+function clearFacetFilter(){ FILTER={facet:null,tag:null}; if(document.getElementById("incidents").classList.contains("on"))renderIncidents(); else renderStories(); }
 function sortedList(){return CUR_KIND==='topic'?sortedTopics():sortedStories();}
 function renderIssues(sortKey){
   CURRENT_SORT=sortKey||CURRENT_SORT;
@@ -306,7 +328,7 @@ async function openDetail(topic,kind){
   const nq=(d.quotes||[]).length+(d.news||[]).length+(off?1:0);
   const verb=nq?`<details><summary>Sources (${nq})</summary>${offV?`<div class="dsec">Official line</div>${offV}`:''}${pubV?`<div class="dsec">Public posts</div>${pubV}`:''}${newsV?`<div class="dsec">Referenced news</div>${newsV}`:''}</details>`:'';
   document.getElementById("detail").innerHTML=`
-    <div class="dsum" style="color:var(--mut);font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:.05em">${kind==='story'?((d.cats||[]).map(nameOf).join(' · ')+(d.status?' · '+d.status:'')):(EXEC?(d.max_sev>0?sevWord(d.max_sev)+' severity':'Issue'):nameOf(topic)+(d.max_sev>0?` · ⚠ ${Math.round(d.max_sev)}`:''))}</div>
+    <div class="dsum" style="color:var(--mut);font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:.05em">${kind==='story'?(facetLine(d)+(d.status?' · '+d.status:'')):(EXEC?(d.max_sev>0?sevWord(d.max_sev)+' severity':'Issue'):nameOf(topic)+(d.max_sev>0?` · ⚠ ${Math.round(d.max_sev)}`:''))}</div>
     <div class="dtitle">${title}</div>
     ${TLDR?'':`<p class="dsum">${summary}</p>
     <div class="dsum" style="font-size:12px">Window: last 30 days${d.pub_last?` · latest public post ${d.pub_last}`:''}</div>`}
@@ -325,7 +347,7 @@ async function openMedia(id){
   document.getElementById("detail").innerHTML='<div class="loading">Loading coverage…</div>';
   document.getElementById("ov").classList.add("on");
   let d;try{d=await rpc('get_story_detail',{p_story_id:id,p_from:RANGE.from,p_to:RANGE.to});}catch(e){document.getElementById("detail").innerHTML='<div class="onreq">Could not load coverage: '+e.message+'</div>';return;}
-  const cats=(d.cats||[]).map(c=>`<span class="kw">${nameOf(c)}</span>`).join(' ');
+  const fl=facetLine(d);
   const news=(d.news||[]);
   const artList=news.length?news.map(n=>`<div class="dq" style="font-style:normal">${n.t}<span class="src">${platOf(n.u)||'news media'} · ${n.d} · ${ragDot(n.sc)}${n.u?` · <a class="lnk" href="${n.u}" target="_blank" rel="noopener">read article ↗</a>`:''}</span></div>`).join(''):'<div class="meta">No media articles in this window.</div>';
   const pub=(d.quotes||[]);
@@ -333,7 +355,7 @@ async function openMedia(id){
   document.getElementById("detail").innerHTML=`
     <div class="dsum" style="color:var(--mut);font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:.05em">Media coverage</div>
     <div class="dtitle">${d.title||'Coverage'}</div>
-    ${cats?`<div style="margin:6px 0 10px">${cats}</div>`:''}
+    ${fl?`<div class="dsum" style="font-size:12px;margin:4px 0 10px">${fl}</div>`:''}
     <div class="dsec">Articles (${news.length})</div>
     ${artList}
     ${pubList?`<div class="dsec" style="margin-top:14px">Public posts</div>${pubList}`:''}`;
@@ -432,13 +454,22 @@ function render(B){
   document.querySelector("#src tbody").innerHTML=(B.sources||[]).map(s=>`<tr><td>${s.s}</td><td class="num">${s.n}</td></tr>`).join('')+`<tr><td><strong>Total</strong></td><td class="num"><strong>${m.total}</strong></td></tr>`;
   loadCapStatus();
 }
-document.getElementById("tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id===b.dataset.v));window.scrollTo(0,0);if(b.dataset.v==='overview')renderCloud();if(b.dataset.v==='stories')renderStories();if(b.dataset.v==='issues')renderTopics();if(window.gtag)gtag('event','tab_view',{tab:b.dataset.v});});
+document.getElementById("tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id===b.dataset.v));window.scrollTo(0,0);if(b.dataset.v==='overview')renderCloud();if(b.dataset.v==='stories')renderStories();if(b.dataset.v==='incidents')renderIncidents();if(b.dataset.v==='issues')renderFacetBoard();if(window.gtag)gtag('event','tab_view',{tab:b.dataset.v});});
 document.getElementById("ssort").addEventListener("change",e=>{STORY_SORT=e.target.value;drawStories();});
+document.getElementById("isort").addEventListener("change",e=>{ISORT=e.target.value;drawIncidents();});
+document.getElementById("ffacet").addEventListener("change",e=>{const f=e.target.value;const ft=document.getElementById("ftag");if(!f){FILTER={facet:null,tag:null};ft.innerHTML='<option value="">all</option>';renderStories();return;}FILTER={facet:f,tag:null};populateFTags(f);renderStories();});
+document.getElementById("ftag").addEventListener("change",e=>{const t=e.target.value;const f=document.getElementById("ffacet").value||null;FILTER={facet:f,tag:t||null};renderStories();});
 (function(){const el=document.getElementById('ov-trend');if(!el)return;const show=e=>{const r=e.target.closest&&e.target.closest('rect.th');if(!r){trendTip.style.display='none';return;}const b=el.getBoundingClientRect();trendTip.innerHTML=`<b>${fdate(r.getAttribute('data-d'))}</b><br><span style="color:var(--green)">●</span> ${r.getAttribute('data-p')} positive · <span style="color:var(--amber)">●</span> ${r.getAttribute('data-u')} neutral · <span style="color:var(--red)">●</span> ${r.getAttribute('data-g')} negative`;trendTip.style.display='block';let lx=e.clientX-b.left+10;lx=Math.min(lx,b.width-170);trendTip.style.left=Math.max(2,lx)+'px';trendTip.style.top=Math.max(2,e.clientY-b.top-14)+'px';};el.addEventListener('pointermove',show);el.addEventListener('pointerdown',show);el.addEventListener('pointerleave',()=>{trendTip.style.display='none';});})();
 function applyTldr(){const b=document.getElementById("tldr");if(b){b.classList.toggle("on",TLDR);b.textContent=TLDR?"TL;DR ✓":"TL;DR";}document.body.classList.toggle("tldr",TLDR);}
-document.getElementById("tldr").addEventListener("click",()=>{TLDR=!TLDR;try{localStorage.setItem("tldr",TLDR?"1":"0");}catch(e){}applyTldr();if(BOARD)render(BOARD);if(STORIES.length){if(document.getElementById("stories").classList.contains("on"))drawStories();if(document.getElementById("issues").classList.contains("on"))drawTopics();}if(document.getElementById("ov").classList.contains("on")&&CURRENT_TOPIC)openByKind(CURRENT_TOPIC,CUR_KIND);});
+document.getElementById("tldr").addEventListener("click",()=>{TLDR=!TLDR;try{localStorage.setItem("tldr",TLDR?"1":"0");}catch(e){}applyTldr();if(BOARD)render(BOARD);if(STORIES.length&&document.getElementById("stories").classList.contains("on"))drawStories();if(STORIES.length&&document.getElementById("incidents").classList.contains("on"))drawIncidents();if(document.getElementById("ov").classList.contains("on")&&CURRENT_TOPIC)openByKind(CURRENT_TOPIC,CUR_KIND);});
 applyTldr();
-document.addEventListener("click",e=>{const mr=e.target.closest(".row[data-media]");if(mr){openMedia(decodeURIComponent(mr.dataset.media));return;}const sr=e.target.closest(".row[data-story]");if(sr){openDetail(decodeURIComponent(sr.dataset.story),'story');return;}const r=e.target.closest(".row[data-topic]");if(r)openDetail(decodeURIComponent(r.dataset.topic),'topic');});
+document.addEventListener("click",e=>{
+  if(e.target.closest(".clearfilter")){clearFacetFilter();return;}
+  const fr=e.target.closest(".row[data-facet]");if(fr){applyFacetFilter(fr.dataset.facet,decodeURIComponent(fr.dataset.tag));return;}
+  const mr=e.target.closest(".row[data-media]");if(mr){openMedia(decodeURIComponent(mr.dataset.media));return;}
+  const sr=e.target.closest(".row[data-story]");if(sr){openDetail(decodeURIComponent(sr.dataset.story),'story');return;}
+  const r=e.target.closest(".row[data-topic]");if(r)openDetail(decodeURIComponent(r.dataset.topic),'topic');});
+document.getElementById("lensbar").addEventListener("click",e=>{const b=e.target.closest("span[data-l]");if(!b)return;LENS=b.dataset.l;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));renderFacetBoard();});
 document.addEventListener("keydown",e=>{const open=document.getElementById("ov").classList.contains("on");if(e.key==="Escape")closeDetail();else if(open&&e.key==="ArrowLeft")navIssue(-1);else if(open&&e.key==="ArrowRight")navIssue(1);});
 document.getElementById("navPrev").addEventListener("click",()=>navIssue(-1));
 document.getElementById("navNext").addEventListener("click",()=>navIssue(1));
@@ -453,7 +484,7 @@ document.addEventListener("click",e=>{if(!e.target.closest(".sharewrap"))closeSh
 window.addEventListener("hashchange",handleHash);
 let RANGE={from:null,to:null};
 function ymd(d){return d.toISOString().slice(0,10);}
-function loadBoard(){STORIES_KEY=null;const L=document.getElementById("loading");L.style.display="block";L.textContent="Loading…";rpc('get_board',{p_from:RANGE.from,p_to:RANGE.to}).then(render).catch(e=>{L.textContent="Could not load live data: "+e.message+". (Check network / login.)";});if(document.getElementById("stories").classList.contains("on"))renderStories();if(document.getElementById("issues").classList.contains("on"))renderTopics();}
+function loadBoard(){STORIES_KEY=null;const L=document.getElementById("loading");L.style.display="block";L.textContent="Loading…";rpc('get_board',{p_from:RANGE.from,p_to:RANGE.to}).then(render).catch(e=>{L.textContent="Could not load live data: "+e.message+". (Check network / login.)";});if(document.getElementById("stories").classList.contains("on"))renderStories();if(document.getElementById("incidents").classList.contains("on"))renderIncidents();if(document.getElementById("issues").classList.contains("on"))renderFacetBoard();}
 function setDays(days){const to=new Date();const from=new Date();from.setDate(from.getDate()-(days-1));RANGE={from:ymd(from),to:ymd(to)};loadBoard();}
 document.getElementById("range").addEventListener("click",e=>{const b=e.target.closest("span[data-d]");if(!b)return;const cal=document.getElementById("calbar");
   if(b.dataset.d==='cal'){cal.style.display=cal.style.display==='none'?'flex':'none';return;}
